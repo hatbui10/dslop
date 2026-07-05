@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Lớp Học Theo Số</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --container-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-hover: #334155;
+            --text-main: #f8fafc;
+            --accent-color: #38bdf8;
+            --accent-hover: #7dd3fc;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 40px;
+            font-size: 2.3rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: var(--accent-hover);
+            border-left: 4px solid var(--accent-color);
+            padding-left: 15px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #1e293b, transparent);
+            padding-top: 8px;
+            padding-bottom: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            background-color: var(--card-hover);
+            border-color: var(--accent-color);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .card a {
+            display: block;
+            width: 100%;
+            padding: 18px 12px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            text-transform: capitalize;
+        }
+
+        .card:hover a {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Hệ Thống Phân Loại Lớp Học</h1>
+    
+    
+    <div class="section-title">Các Lớp Khối 2</div>
+    <div class="grid">
+         <div class="card"><a href="https://hatbui10.github.io/smartkid/" target="_blank">Smartkid</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/skykid/" target="_blank">Skykid</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/cloudkid/" target="_blank">Cloudkid</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 3</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/ozon/" target="_blank">Ozon</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/mickey/" target="_blank">Mickey</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 4</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/quest4a/" target="_blank">Quest4a</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/orford4a/" target="_blank">Orford4a</a></div>
+       <div class="card"><a href="https://hatbui10.github.io/cambridge/" target="_blank">Cambridge</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/king/" target="_blank">King</a></div>
+       <div class="card"><a href="https://hatbui10.github.io/galaxy/" target="_blank">Galaxy</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 5</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/kind5/" target="_blank">Kind5</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/like5/" target="_blank">Like5</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/apolo/" target="_blank">Apolo</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 6</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/smile6/" target="_blank">Smile6</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/evic6/" target="_blank">Evic6</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/paris6/" target="_blank">Paris6</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/mar6/" target="_blank">Mar6</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/good6/" target="_blank">Good6</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/star6/" target="_blank">Star6</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 7</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/ila7/" target="_blank">Ila7</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/moon7/" target="_blank">Moon7</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/delta7/" target="_blank">Delta7</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/kid7/" target="_blank">Kid7</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/bossvip/" target="_blank">Bossvip</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 8</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/happy8/" target="_blank">Happy8</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/high8/" target="_blank">High8</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/hope8/" target="_blank">Hope8</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/sun8/" target="_blank">Sun8</a></div>
+<div class="card"><a href="https://hatbui10.github.io/supervip/" target="_blank">Supervip</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 9</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/sea9/" target="_blank">Sea9</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/big9/" target="_blank">Big9</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/clc9/" target="_blank">Clc9</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/super9/" target="_blank">Super9</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 10</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/cloud10/" target="_blank">Cloud10</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/win10/" target="_blank">Win10</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/try10/" target="_blank">Try10</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 11</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/can11/" target="_blank">Can11</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/ocean11/" target="_blank">Ocean11</a></div>
+    </div>
+
+    <div class="section-title">Các Lớp Khối 12</div>
+    <div class="grid">
+        <div class="card"><a href="https://hatbui10.github.io/ieltwonderful12/" target="_blank">Ielt Wonderful 12</a></div>
+        <div class="card"><a href="https://hatbui10.github.io/athena12/" target="_blank">Athena12</a></div>
+    </div>
+
+   
+
+</div>
+
+</body>
+</html>
