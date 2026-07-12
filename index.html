@@ -1,6 +1,4 @@
-localStorage.clear();
-sessionStorage.clear();
-location.reload();<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -246,7 +244,12 @@ function startProcessingExcel(input) {
                 return;
             }
 
-            let totalSheets = sheetsToProcess.length;
+
+
+
+
+
+           let totalSheets = sheetsToProcess.length;
             let currentSheetIdx = 0;
 
             function parseSheetStep() {
@@ -277,16 +280,17 @@ function startProcessingExcel(input) {
                 const sheetName = sheetsToProcess[currentSheetIdx];
                 const sheet = workbook.Sheets[sheetName];
                 const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 if (rows.length > 0) {
-                    const colAIndex = 0;  
-                    const colBIndex = 1;  
-                    const colPIndex = 16; 
+                    const colAIndex = 0;
+                    const colBIndex = 1;
+                    const colPIndex = 16;
 
                     let detectedClassName = "";
-let previousText = "";
+                    let previousText = "";
+                    let readingStudents = false;
 
-                    rows.forEach((row, rowIndex) => {
+                    rows.forEach((row) => {
                         if (!row) return;
 
                         let cellA = row[colAIndex] ? row[colAIndex].toString().trim() : "";
@@ -294,72 +298,92 @@ let previousText = "";
                         let cellP = row[colPIndex] ? row[colPIndex].toString().trim() : "";
 
                         let cellB_lower = cellB.toLowerCase();
-                        let cleanPhoneCheck = cellP.replace(/[^0-9]/g, "");
 
-                        // ================= NHẬN DIỆN TÊN LỚP =================
+                        let cleanPhone = cellP.replace(/[^0-9]/g, "");
+                        if (cleanPhone.length === 9 && !cleanPhone.startsWith("0")) {
+                            cleanPhone = "0" + cleanPhone;
+                        }
 
-const isSchedule =
-    /^t[2-7]/i.test(cellB) ||
-    /^cn/i.test(cellB) ||
-    /18h|19h|20h/i.test(cellB) ||
-    cellB.includes("THỨ");
-
-if (isSchedule) {
-    if (previousText) {
-        detectedClassName = previousText;
-    }
-    return;
-}
-
-// lưu lại dòng hiện tại để dùng nếu dòng sau là lịch học
-if (
-    cellB &&
-    cleanPhoneCheck.length < 9 &&
-    cellB_lower !== "tên học sinh" &&
-    cellB_lower !== "tên hs" &&
-    cellB_lower !== "họ và tên"
-) {
-    previousText = cellB;
-}
-
-                        if (cellB === "" || cellB_lower === "tên học sinh" || cellB_lower === "tên hs" || cellB_lower === "họ và tên") {
+                        if (
+                            cellB === "" ||
+                            cellB_lower === "tên học sinh" ||
+                            cellB_lower === "tên hs" ||
+                            cellB_lower === "họ và tên"
+                        ) {
                             return;
                         }
 
-                        let cleanPhone = cellP.replace(/[^0-9]/g, "");
-                        if (cleanPhone.length === 9 && !cleanPhone.startsWith("0")) cleanPhone = "0" + cleanPhone;
+                        const isSchedule =
+                            /^t[2-7]/i.test(cellB) ||
+                            /^cn/i.test(cellB) ||
+                            /18h|19h|20h/i.test(cellB) ||
+                            cellB.includes("THỨ");
 
-                        if (cellB && !/^\d+$/.test(cellB) && cleanPhone.length >= 9 && cleanPhone.length <= 11) {
-                            let currentClassKey = detectedClassName ? detectedClassName : `Chung Khối - ${sheetName}`;
-                            
-                            if (!bigClassesDatabase[currentClassKey]) {
-                                bigClassesDatabase[currentClassKey] = {
-                                    sheet: sheetName,
-                                    students: []
-                                };
+                        if (isSchedule) {
+                            if (previousText) {
+                                detectedClassName = previousText;
+                            }
+                            readingStudents = true;
+                            return;
+                        }
+
+                        if (readingStudents) {
+                            if (
+                                cellB &&
+                                !/^\d+$/.test(cellB) &&
+                                cleanPhone.length >= 9 &&
+                                cleanPhone.length <= 11
+                            ) {
+                                let currentClassKey = detectedClassName || `Chung Khối - ${sheetName}`;
+
+                                if (!bigClassesDatabase[currentClassKey]) {
+                                    bigClassesDatabase[currentClassKey] = {
+                                        sheet: sheetName,
+                                        students: []
+                                    };
+                                }
+
+                                bigClassesDatabase[currentClassKey].students.push({
+                                    id: bigClassesDatabase[currentClassKey].students.length + 1,
+                                    name: cellB,
+                                    phone: cleanPhone,
+                                    status: "present",
+                                    note: ""
+                                });
+                                return;
                             }
 
-                            bigClassesDatabase[currentClassKey].students.push({
-                                id: bigClassesDatabase[currentClassKey].students.length + 1,
-                                name: cellB,
-                                phone: cleanPhone,
-                                status: 'present',
-                                note: ''
-                            });
+                            if (cellB && cleanPhone.length < 9) {
+                                readingStudents = false;
+                                previousText = cellB;
+                                return;
+                            }
+                            return;
+                        }
+
+                        if (cellB && cleanPhone.length < 9) {
+                            previousText = cellB;
                         }
                     });
                 }
+                
 
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+                // Chuyển sang sheet tiếp theo và gọi đệ quy bằng setTimeout để không bị block UI
                 currentSheetIdx++;
-                setTimeout(parseSheetStep, 15); 
+                setTimeout(parseSheetStep, 10);
             }
 
+            // Gọi hàm bắt đầu xử lý sheet đầu tiên
             parseSheetStep();
-
+            
         } catch (err) {
             console.error(err);
-            alert("Đã xảy ra lỗi khi giải mã cấu trúc tệp Excel!");
-            progressContainer.style.display = 'none';
+            alert("Lỗi khi đọc dữ liệu từ file Excel!");
+            document.getElementById('progressContainer').style.display = 'none';
         }
     };
     reader.readAsArrayBuffer(file);
