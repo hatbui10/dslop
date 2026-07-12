@@ -404,6 +404,19 @@ function renderFullSystemUI() {
     mainContainer.innerHTML = "";
 
     const classKeys = Object.keys(bigClassesDatabase);
+	classKeys.sort((a, b) => {
+    const order = ["SV","2","3","4","5","6","7","8","9","10","11","12","DH25","DH26"];
+
+    const sa = bigClassesDatabase[a].sheet;
+    const sb = bigClassesDatabase[b].sheet;
+
+    const ia = order.indexOf(sa);
+    const ib = order.indexOf(sb);
+
+    if (ia !== ib) return ia - ib;
+
+    return a.localeCompare(b, "vi");
+});
     if (classKeys.length === 0) {
         mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Hệ thống sẽ tự động vẽ giao diện HTML 1 sau khi bạn nạp file Excel thành công!</div>';
         return;
