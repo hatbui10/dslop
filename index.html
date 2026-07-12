@@ -189,7 +189,6 @@ window.onload = function() {
     if (cachedData) {
         bigClassesDatabase = JSON.parse(cachedData);
         
-        // Đếm tổng số học viên trong cache
         let totalCount = 0;
         Object.keys(bigClassesDatabase).forEach(k => {
             totalCount += bigClassesDatabase[k].students.length;
@@ -201,7 +200,7 @@ window.onload = function() {
     }
 };
 
-// THUẬT TOÁN ĐỌC FILE EXCEL & TỰ ĐỘNG PHÂN TÁCH LỚP HỌC ĐỘNG CHUẨN XÁC
+// THUẬT TOÁN ĐỌC FILE EXCEL - TÍNH NĂNG CHẶN 3 DÒNG TRỐNG THÔNG MINH
 function startProcessingExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -240,14 +239,13 @@ function startProcessingExcel(input) {
                     progressBar.style.width = '100%';
                     progressBar.innerText = '100% Hoàn thành';
                     
-                    // Tính tổng học sinh sau khi quét xong toàn bộ file
                     let totalStudentsCount = 0;
                     Object.keys(bigClassesDatabase).forEach(classKey => {
                         totalStudentsCount += bigClassesDatabase[classKey].students.length;
                     });
 
                     document.getElementById('fileStatusMessage').style.color = "#00ff66";
-                    document.getElementById('fileStatusMessage').innerText = `✅ Nạp thành công! Tìm thấy tổng cộng ${totalStudentsCount} học viên. Đã vẽ xong Form Quản Lý cho tất cả các lớp.`;
+                    document.getElementById('fileStatusMessage').innerText = `✅ Nạp thành công! Tìm thấy tổng cộng ${totalStudentsCount} học viên hợp lệ.`;
                     
                     localStorage.setItem('big_classes_database', JSON.stringify(bigClassesDatabase));
                     localStorage.setItem('big_classes_filename', file.name);
@@ -270,32 +268,58 @@ function startProcessingExcel(input) {
                     const colPIndex = 16; 
 
                     let detectedClassName = "";
+                    let blankCount = 0;        // Biến đếm số hàng trống liên tiếp
+                    let skipStudents = false;  // Cờ đánh dấu bỏ qua học sinh rác phía dưới
 
                     rows.forEach((row, rowIndex) => {
-                        if (!row) return;
+                        if (!row) {
+                            blankCount++;
+                            if (blankCount >= 3) skipStudents = true;
+                            return;
+                        }
 
                         let cellA = row[colAIndex] ? row[colAIndex].toString().trim() : "";
                         let cellB = row[colBIndex] ? row[colBIndex].toString().trim() : "";
                         let cellP = row[colPIndex] ? row[colPIndex].toString().trim() : "";
 
+                        // Kiểm tra nếu là dòng trống thực tế (không có chữ)
+                        if (cellA === "" && cellB === "" && cellP === "") {
+                            blankCount++;
+                            if (blankCount >= 3) skipStudents = true;
+                            return;
+                        }
+
                         let cellB_lower = cellB.toLowerCase();
                         let cleanPhoneCheck = cellP.replace(/[^0-9]/g, "");
 
+                        // 1. NHẬN DIỆN DÒNG CHỨA TÊN LỚP MỚI ĐỂ PHÂN LOẠI
                         if (cellB && cleanPhoneCheck.length < 9 && 
                             (cellB.includes("-") || cellB.includes("/") || cellA.match(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/) || cellB_lower.includes("kid") || cellB_lower.includes("smile") || cellB_lower.includes("happy") || cellB_lower.includes("athena") || cellB_lower.includes("win"))) {
                             
                             detectedClassName = cellB; 
+                            skipStudents = false; // Tắt cờ bỏ qua ngay lập tức khi phát hiện tiêu đề lớp mới
+                            blankCount = 0;       // Reset bộ đếm dòng trống
                             return;
                         }
 
-                        if (cellB === "" || cellB_lower === "tên học sinh" || cellB_lower === "tên hs" || cellB_lower === "họ và tên") {
+                        // Bỏ qua tiêu đề cột lặp lại
+                        if (cellB_lower === "tên học sinh" || cellB_lower === "tên hs" || cellB_lower === "họ và tên") {
+                            blankCount = 0;
                             return;
                         }
 
+                        // 2. NẾU ĐANG BẬT TRẠNG THÁI BỎ QUA THÌ KHÔNG NẠP TIẾP HỌC SINH CŨ
+                        if (skipStudents) {
+                            return;
+                        }
+
+                        // Chuẩn hóa và lọc nạp thông tin học sinh chính thức
                         let cleanPhone = cellP.replace(/[^0-9]/g, "");
                         if (cleanPhone.length === 9 && !cleanPhone.startsWith("0")) cleanPhone = "0" + cleanPhone;
 
                         if (cellB && !/^\d+$/.test(cellB) && cleanPhone.length >= 9 && cleanPhone.length <= 11) {
+                            blankCount = 0; // Đang chạy dãy học sinh chính thức thì reset dòng trống
+                            
                             let currentClassKey = detectedClassName ? detectedClassName : `Chung Khối - ${sheetName}`;
                             
                             if (!bigClassesDatabase[currentClassKey]) {
