@@ -287,6 +287,7 @@ function startProcessingExcel(input) {
                     const colPIndex = 16;
 
                     let detectedClassName = "";
+                    let detectedSchedule = "";
                     let previousText = "";
                     let readingStudents = false;
 
@@ -323,6 +324,7 @@ function startProcessingExcel(input) {
                             if (previousText) {
                                 detectedClassName = previousText;
                             }
+                            detectedSchedule = cellB;   // Lưu lịch học
                             readingStudents = true;
                             return;
                         }
@@ -339,6 +341,7 @@ function startProcessingExcel(input) {
                                 if (!bigClassesDatabase[currentClassKey]) {
                                     bigClassesDatabase[currentClassKey] = {
                                         sheet: sheetName,
+                                        schedule: detectedSchedule,
                                         students: []
                                     };
                                 }
@@ -422,6 +425,9 @@ function renderFullSystemUI() {
             <div class="class-accordion-header" onclick="toggleClassAccordion(this)">
              
                 <div class="class-main-title">Lớp: ${classKey}</div>
+<div class="class-schedule">
+    ${classObj.schedule || ""}
+</div>
                 <div class="class-stats" id="stats-${classKey.replace(/\s+/g, '-')}">Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}</div>
             </div>
             
