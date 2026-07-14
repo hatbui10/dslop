@@ -7,7 +7,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-    
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: #050508; color: #e0e0e6; padding: 20px 8px; max-width: 600px; margin: 0 auto; }
@@ -18,46 +17,21 @@
         /* 📂 KHU VỰC TẢI FILE */
         .upload-card { background: #0a0a14; border: 1px solid #ffd700; border-radius: 6px; padding: 15px 10px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
         .upload-card p { font-size: 0.85rem; color: #aaa; text-align: center; margin-bottom: 12px; }
-        
         .btn-group-top { width: 100%; display: block; text-align: center; margin-bottom: 5px; }
         
-        /* Định dạng nút Tải lên */
         .custom-upload-btn { 
-            display: inline-block; 
-            width: 48%; 
-            background: transparent; 
-            border: 1px solid #00f0ff; 
-            color: #00f0ff; 
-            padding: 12px 5px; 
-            font-weight: bold; 
-            font-size: 0.85rem; 
-            border-radius: 25px; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            text-align: center;
-            margin-right: 2%;
-            box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+            display: inline-block; width: 48%; background: transparent; border: 1px solid #00f0ff; color: #00f0ff; 
+            padding: 12px 5px; font-weight: bold; font-size: 0.85rem; border-radius: 25px; cursor: pointer; 
+            text-transform: uppercase; text-align: center; margin-right: 2%; box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
         }
         .custom-upload-btn:active { background: #00f0ff; color: #000; }
         
-        /* Định dạng nút Xóa hết cũ */
         .btn-danger-top { 
-            display: inline-block; 
-            width: 48%; 
-            background: transparent; 
-            border: 1px solid #ff007f; 
-            color: #ff007f; 
-            padding: 12px 5px; 
-            font-weight: bold; 
-            font-size: 0.85rem; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            text-align: center;
-            box-shadow: 0 0 8px rgba(255, 0, 127, 0.2);
+            display: inline-block; width: 48%; background: transparent; border: 1px solid #ff007f; color: #ff007f; 
+            padding: 12px 5px; font-weight: bold; font-size: 0.85rem; border-radius: 20px; cursor: pointer; 
+            text-transform: uppercase; text-align: center; box-shadow: 0 0 8px rgba(255, 0, 127, 0.2);
         }
         .btn-danger-top:active { background: #ff007f; color: #fff; }
-        
         .file-status { font-size: 0.85rem; color: #ffd700; text-align: center; margin-top: 12px; font-weight: bold; line-height: 1.3; }
         
         /* ⏳ PROGRESS BAR */
@@ -78,22 +52,28 @@
         .result-table th { background-color: #4a0025; color: #fff; text-transform: uppercase; font-size: 0.75rem; }
         .result-table tr:nth-child(even) { background-color: rgba(255, 0, 127, 0.03); }
 
-        /* 🏫 KHỐI GIAO DIỆN CHÍNH & ACCORDION */
-        .class-block-wrapper { margin-bottom: 15px; background: #0a0a14; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
-        
-        /* Tiêu đề đóng vai trò là Nút Accordion kích hoạt click */
+        /* 📦 KHỐI NHÓM LỚP (GIAO DIỆN MỚI) */
+        .group-block-wrapper { margin-bottom: 20px; background: #04040a; border: 1px solid #ffd700; border-radius: 8px; overflow: hidden; box-shadow: 0 0 12px rgba(255, 215, 0, 0.05); }
+        .group-accordion-header { padding: 14px 12px; background: #111122; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; border-bottom: 2px solid #ffd700; display: flex; justify-content: space-between; align-items: center; }
+        .group-accordion-header:active { background: #1c1c38; }
+        .group-accordion-header::after { content: '▼'; color: #ffd700; font-size: 0.9rem; transition: transform 0.3s; margin-left: 10px; }
+        .group-block-wrapper.active .group-accordion-header::after { content: '▲'; }
+        .group-main-title { color: #ffd700; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-shadow: 0 0 8px rgba(255, 215, 0, 0.2); }
+        .group-stats { color: #aaa; font-size: 0.85rem; font-weight: bold; }
+        .group-panel { padding: 12px 6px; display: none; background: #06060c; }
+        .group-block-wrapper.active .group-panel { display: block; }
+
+        /* 🏫 KHỐI GIAO DIỆN CHÍNH & ACCORDION LỚP CON */
+        .class-block-wrapper { margin-bottom: 12px; background: #0a0a14; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
         .class-accordion-header { padding: 12px 10px; background: #0d0d1f; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .class-accordion-header:active { background: #151530; }
         .class-accordion-header::after { content: '▼'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #00f0ff; font-size: 0.8rem; transition: transform 0.3s; }
-        
-        /* Xoay mũi tên khi mở lớp */
-        .class-block-wrapper.active .class-accordion-header::after { content: '▲'; color: #ffd700; }
+        .class-block-wrapper.active .class-accordion-header::after { content: '▲'; color: #00ff66; }
         
         .class-sheet-badge { display: inline-block; background: #4a0025; color: #ff007f; border: 1px solid #ff007f; font-size: 0.7rem; font-weight: bold; padding: 1px 6px; border-radius: 3px; margin-bottom: 4px; text-transform: uppercase; }
         .class-main-title { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.3); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-        .class-stats { text-align: left; color: #ffd700; font-size: 0.85rem; margin-top: 3px; font-weight: 500; }
+        .class-stats { text-align: left; color: #00ff66; font-size: 0.85rem; margin-top: 3px; font-weight: 500; }
         
-        /* Panel chứa nội dung chi tiết của lớp - Ẩn mặc định */
         .class-panel { padding: 15px 8px; display: none; background: #0a0a14; }
         .class-block-wrapper.active .class-panel { display: block; }
         
@@ -140,15 +120,11 @@
 <h2>HỆ THỐNG QUẢN LÝ ĐIỂM DANH ĐỘNG</h2>
 
 <div class="upload-card">
-  
-    
     <div class="btn-group-top">
         <label for="excelFileInput" class="custom-upload-btn">📂 Tải lên File Excel</label>
         <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="startProcessingExcel(this)">
-        
         <button class="btn-danger-top" onclick="clearSystemCache()"> XÓA dữ liệu CŨ</button>
     </div>
-    
     <div id="fileStatusMessage" class="file-status">Chưa có dữ liệu học viên. Vui lòng chọn tệp Excel.</div>
 </div>
 
@@ -188,31 +164,24 @@ const targetSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3",
 let bigClassesDatabase = {};
 
 function displayPhone(p) { 
-    if(!p || p === 'Chưa có' || p === 'undefined') return 'Chưa có'; 
+    if(!p || p === 'Chưa có' || p === 'undefined') return 'Chưa có';
     let c = p.toString().replace(/\s+/g, ''); 
-    if(c.length === 10) return c.substring(0,4) + ' ' + c.substring(4,7) + ' ' + c.substring(7); 
+    if(c.length === 10) return c.substring(0,4) + ' ' + c.substring(4,7) + ' ' + c.substring(7);
     return p; 
 }
 
 window.onload = async function () {
-
     try {
         await window.loadFromFirebase();
-
     } catch (e) {
-
         const cachedData = localStorage.getItem("big_classes_database");
-
         if (cachedData) {
             bigClassesDatabase = JSON.parse(cachedData);
             renderFullSystemUI();
         }
-
     }
-
 }
 
-// THUẬT TOÁN ĐỌC FILE EXCEL & TỰ ĐỘNG PHÂN TÁCH LỚP HỌC ĐỘNG CHUẨN XÁC
 function startProcessingExcel(input) {
     const file = input.files[0];
     if (!file) return;
@@ -220,15 +189,13 @@ function startProcessingExcel(input) {
     document.getElementById('fileStatusMessage').style.color = "#ffd700";
     document.getElementById('fileStatusMessage').innerText = `Đang xử lý phân tách lớp từ tệp: ${file.name}...`;
     document.getElementById('searchResultBox').style.display = 'none';
-    
     const progressContainer = document.getElementById('progressContainer');
     const progressBar = document.getElementById('progressBar');
     progressContainer.style.display = 'block';
     progressBar.style.width = '0%';
     progressBar.innerText = '0%';
 
-    bigClassesDatabase = {}; 
-
+    bigClassesDatabase = {};
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
@@ -236,19 +203,13 @@ function startProcessingExcel(input) {
             const workbook = XLSX.read(data, { type: 'array', cellStyles: true });
             
             const sheetsToProcess = workbook.SheetNames.filter(name => targetSheets.includes(name.trim()));
-            
             if (sheetsToProcess.length === 0) {
                 alert("Không tìm thấy các sheet mục tiêu (SV, 12, 11... DH26) trong file Excel của bạn!");
                 progressContainer.style.display = 'none';
                 return;
             }
 
-
-
-
-
-
-           let totalSheets = sheetsToProcess.length;
+            let totalSheets = sheetsToProcess.length;
             let currentSheetIdx = 0;
 
             async function parseSheetStep() {
@@ -256,14 +217,12 @@ function startProcessingExcel(input) {
                     progressBar.style.width = '100%';
                     progressBar.innerText = '100% Hoàn thành';
                     
-                    // Tính tổng học sinh sau khi quét xong toàn bộ file
                     let totalStudentsCount = 0;
                     Object.keys(bigClassesDatabase).forEach(classKey => {
                         totalStudentsCount += bigClassesDatabase[classKey].students.length;
                     });
-
                     document.getElementById('fileStatusMessage').style.color = "#00ff66";
-                    document.getElementById('fileStatusMessage').innerText = `✅ Nạp thành công! Tìm thấy tổng cộng ${totalStudentsCount} học viên. Đã vẽ xong Form Quản Lý cho tất cả các lớp.`;
+                    document.getElementById('fileStatusMessage').innerText = `✅ Nạp thành công! Tìm thấy tổng cộng ${totalStudentsCount} học viên.\nĐã vẽ xong Form Quản Lý cho tất cả các lớp.`;
                     
                     localStorage.setItem('big_classes_database', JSON.stringify(bigClassesDatabase));
                     localStorage.setItem('big_classes_filename', file.name);
@@ -280,7 +239,7 @@ function startProcessingExcel(input) {
                 const sheetName = sheetsToProcess[currentSheetIdx];
                 const sheet = workbook.Sheets[sheetName];
                 const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
                 if (rows.length > 0) {
                     const colAIndex = 0;
                     const colBIndex = 1;
@@ -299,45 +258,30 @@ function startProcessingExcel(input) {
                         let cellP = row[colPIndex] ? row[colPIndex].toString().trim() : "";
 
                         let cellB_lower = cellB.toLowerCase();
-
                         let cleanPhone = cellP.replace(/[^0-9]/g, "");
+                    
                         if (cleanPhone.length === 9 && !cleanPhone.startsWith("0")) {
                             cleanPhone = "0" + cleanPhone;
                         }
 
-                        if (
-                            cellB === "" ||
-                            cellB_lower === "tên học sinh" ||
-                            cellB_lower === "tên hs" ||
-                            cellB_lower === "họ và tên"
-                        ) {
+                        if (cellB === "" || cellB_lower === "tên học sinh" || cellB_lower === "tên hs" || cellB_lower === "họ và tên") {
                             return;
                         }
 
-                        const isSchedule =
-                            /^t[2-7]/i.test(cellB) ||
-                            /^cn/i.test(cellB) ||
-                            /18h|19h|20h/i.test(cellB) ||
-                            cellB.includes("THỨ");
+                        const isSchedule = /^t[2-7]/i.test(cellB) || /^cn/i.test(cellB) || /18h|19h|20h/i.test(cellB) || cellB.includes("THỨ");
 
                         if (isSchedule) {
                             if (previousText) {
                                 detectedClassName = previousText;
                             }
-                            detectedSchedule = cellB;   // Lưu lịch học
+                            detectedSchedule = cellB;
                             readingStudents = true;
                             return;
                         }
 
                         if (readingStudents) {
-                            if (
-                                cellB &&
-                                !/^\d+$/.test(cellB) &&
-                                cleanPhone.length >= 9 &&
-                                cleanPhone.length <= 11
-                            ) {
+                            if (cellB && !/^\d+$/.test(cellB) && cleanPhone.length >= 9 && cleanPhone.length <= 11) {
                                 let currentClassKey = detectedClassName ;
-
                                 if (!bigClassesDatabase[currentClassKey]) {
                                     bigClassesDatabase[currentClassKey] = {
                                         sheet: sheetName,
@@ -369,20 +313,10 @@ function startProcessingExcel(input) {
                         }
                     });
                 }
-                
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Chuyển sang sheet tiếp theo và gọi đệ quy bằng setTimeout để không bị block UI
                 currentSheetIdx++;
                 setTimeout(parseSheetStep, 10);
             }
-
-            // Gọi hàm bắt đầu xử lý sheet đầu tiên
             parseSheetStep();
-            
         } catch (err) {
             console.error(err);
             alert("Lỗi khi đọc dữ liệu từ file Excel!");
@@ -392,84 +326,134 @@ function startProcessingExcel(input) {
     reader.readAsArrayBuffer(file);
 }
 
-// HÀM CLICK ĐÓNG MỞ ACCORDION
 function toggleClassAccordion(headerElement) {
     const wrapper = headerElement.parentElement;
     wrapper.classList.toggle('active');
 }
 
-// HÀM VẼ TOÀN BỘ HỆ THỐNG GIAO DIỆN MỚI TÍCH HỢP ACCORDION
+// HÀM CLICK ĐÓNG MỞ ACCORDION KHỐI LỚN
+function toggleGroupAccordion(headerElement) {
+    const wrapper = headerElement.parentElement;
+    wrapper.classList.toggle('active');
+}
+
+// THUẬT TOÁN ĐỊNH NGHĨA KHỐI CHO LỚP HỌC HỆ THỐNG
+function getGroupKeyBySheet(sheetName) {
+    const s = sheetName.trim();
+    if (["2", "3", "4", "5"].includes(s)) return { key: "TIEU_HOC", name: "Khối Tiểu Học (Lớp 2-5)" };
+    if (["6", "7", "8", "9"].includes(s)) return { key: "THCS", name: "Khối THCS (Lớp 6-9)" };
+    if (["10", "11", "12"].includes(s)) return { key: "THPT", name: "Khối THPT (Lớp 10-12)" };
+    if (["DH25", "DH26"].includes(s)) return { key: "DAI_HOC", name: "Khối Đại Học (DH25-26)" };
+    return { key: "KHAC", name: "Khối Khác / Sinh Viên" };
+}
+
 function renderFullSystemUI() {
     const mainContainer = document.getElementById("dynamicMainContainer");
     mainContainer.innerHTML = "";
 
     const classKeys = Object.keys(bigClassesDatabase);
-	classKeys.sort((a, b) => {
-    const order = ["SV","2","3","4","5","6","7","8","9","10","11","12","DH25","DH26"];
-
-    const sa = bigClassesDatabase[a].sheet;
-    const sb = bigClassesDatabase[b].sheet;
-
-    const ia = order.indexOf(sa);
-    const ib = order.indexOf(sb);
-
-    if (ia !== ib) return ia - ib;
-
-    return a.localeCompare(b, "vi");
-});
     if (classKeys.length === 0) {
         mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Hệ thống sẽ tự động vẽ giao diện HTML 1 sau khi bạn nạp file Excel thành công!</div>';
         return;
     }
 
+    // Sắp xếp các lớp con
+    classKeys.sort((a, b) => {
+        const order = ["SV","2","3","4","5","6","7","8","9","10","11","12","DH25","DH26"];
+        const sa = bigClassesDatabase[a].sheet;
+        const sb = bigClassesDatabase[b].sheet;
+        const ia = order.indexOf(sa);
+        const ib = order.indexOf(sb);
+        if (ia !== ib) return ia - ib;
+        return a.localeCompare(b, "vi");
+    });
+
+    // Gom nhóm cấu trúc dữ liệu theo Khối
+    const groupedData = {
+        "TIEU_HOC": { name: "Khối Tiểu Học (Lớp 2-5)", classes: [], totalStudents: 0 },
+        "THCS": { name: "Khối THCS (Lớp 6-9)", classes: [], totalStudents: 0 },
+        "THPT": { name: "Khối THPT (Lớp 10-12)", classes: [], totalStudents: 0 },
+        "DAI_HOC": { name: "Khối Đại Học", classes: [], totalStudents: 0 },
+        "KHAC": { name: "Khối Khác / Khối SV", classes: [], totalStudents: 0 }
+    };
+
     classKeys.forEach(classKey => {
         const classObj = bigClassesDatabase[classKey];
-        const students = classObj.students;
+        const groupInfo = getGroupKeyBySheet(classObj.sheet);
+        groupedData[groupInfo.key].classes.push({ key: classKey, data: classObj });
+        groupedData[groupInfo.key].totalStudents += classObj.students.length;
+    });
+
+    // Vẽ giao diện phân bổ theo Khối
+    const groupOrder = ["TIEU_HOC", "THCS", "THPT", "DAI_HOC", "KHAC"];
+    groupOrder.forEach(gKey => {
+        const group = groupedData[gKey];
+        if (group.classes.length === 0) return; // Khối nào không có lớp thì ẩn đi hoàn toàn
+
+        const groupSection = document.createElement("div");
+        groupSection.className = "group-block-wrapper";
+        groupSection.id = `group-wrapper-${gKey}`;
         
-        const total = students.length;
-        const absent = students.filter(s => s.status === 'absent').length;
-        const present = total - absent;
-
-        const classSection = document.createElement("div");
-        classSection.className = "class-block-wrapper";
-        classSection.setAttribute("data-classname-box", classKey);
-
-        classSection.innerHTML = `
-            <div class="class-accordion-header" onclick="toggleClassAccordion(this)">
-             
-                <div class="class-main-title">Lớp: ${classKey}</div>
-<div class="class-schedule">
-    ${classObj.schedule || ""}
-</div>
-                <div class="class-stats" id="stats-${classKey.replace(/\s+/g, '-')}">Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}</div>
+        // Tạo header cho Khối lớn
+        groupSection.innerHTML = `
+            <div class="group-accordion-header" onclick="toggleGroupAccordion(this)">
+                <div class="group-main-title">${group.name}</div>
+                <div class="group-stats" id="group-stats-${gKey}">Tổng số lớp: ${group.classes.length} | Học sinh: ${group.totalStudents}</div>
             </div>
-            
-            <div class="class-panel">
-                <h3>Danh Sách Chi Tiết</h3>
-                <br>
-                
-                <div class="add-student-box">
-                    <input type="text" id="inputName-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 1: Nhập họ và tên...">
-                    <input type="tel" id="inputPhone-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 2: Nhập số điện thoại...">
-                    <button class="btn-add" onclick="addNewStudentToClass('${classKey}')">+ Thêm vào danh sách</button>
-                </div>
-                
-                <div class="absent-section">
-                    <div class="absent-header">
-                        <span class="absent-title">DANH SÁCH VẮNG HÔM NAY</span>
-                        <button class="copy-btn" onclick="copyAbsentReport('${classKey}')">Copy</button>
-                    </div>
-                    <ul class="absent-list" id="absentList-${classKey.replace(/\s+/g, '-')}">
-                        ${renderAbsentRowsHtml(students)}
-                    </ul>
-                </div>
-                
-                <div class="student-list" id="studentList-${classKey.replace(/\s+/g, '-')}">
-                    ${renderStudentCardsHtml(classKey, students)}
-                </div>
-            </div>
+            <div class="group-panel" id="group-panel-${gKey}"></div>
         `;
-        mainContainer.appendChild(classSection);
+        mainContainer.appendChild(groupSection);
+
+        const groupPanel = groupSection.querySelector(".group-panel");
+
+        // Duyệt và vẽ từng lớp con thuộc Khối này
+        group.classes.forEach(cls => {
+            const classKey = cls.key;
+            const classObj = cls.data;
+            const students = classObj.students;
+            
+            const total = students.length;
+            const absent = students.filter(s => s.status === 'absent').length;
+            const present = total - absent;
+
+            const classSection = document.createElement("div");
+            classSection.className = "class-block-wrapper";
+            classSection.setAttribute("data-classname-box", classKey);
+
+            classSection.innerHTML = `
+                <div class="class-accordion-header" onclick="toggleClassAccordion(this)">
+                    <div class="class-main-title">Lớp: ${classKey}</div>
+                    <div class="class-schedule">${classObj.schedule || ""}</div>
+                    <div class="class-stats" id="stats-${classKey.replace(/\s+/g, '-')}">Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}</div>
+                </div>
+                
+                <div class="class-panel">
+                    <h3>Danh Sách Chi Tiết</h3>
+                    <br>
+                    
+                    <div class="add-student-box">
+                        <input type="text" id="inputName-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 1: Nhập họ và tên...">
+                        <input type="tel" id="inputPhone-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 2: Nhập số điện thoại...">
+                        <button class="btn-add" onclick="addNewStudentToClass('${classKey}')">+ Thêm vào danh sách</button>
+                    </div>
+                    
+                    <div class="absent-section">
+                        <div class="absent-header">
+                            <span class="absent-title">DANH SÁCH VẮNG HÔM NAY</span>
+                            <button class="copy-btn" onclick="copyAbsentReport('${classKey}')">Copy</button>
+                        </div>
+                        <ul class="absent-list" id="absentList-${classKey.replace(/\s+/g, '-')}">
+                            ${renderAbsentRowsHtml(students)}
+                        </ul>
+                    </div>
+                    
+                    <div class="student-list" id="studentList-${classKey.replace(/\s+/g, '-')}">
+                        ${renderStudentCardsHtml(classKey, students)}
+                    </div>
+                </div>
+            `;
+            groupPanel.appendChild(classSection);
+        });
     });
 }
 
@@ -546,35 +530,54 @@ function updateStudentNote(classKey, studentId, value) {
     }
 }
 
+function updateGroupStatsText(sheetName) {
+    const groupInfo = getGroupKeyBySheet(sheetName);
+    const gKey = groupInfo.key;
+    
+    let totalClasses = 0;
+    let totalStudents = 0;
+    
+    Object.keys(bigClassesDatabase).forEach(key => {
+        if (getGroupKeyBySheet(bigClassesDatabase[key].sheet).key === gKey) {
+            totalClasses++;
+            totalStudents += bigClassesDatabase[key].students.length;
+        }
+    });
+    
+    const statsElem = document.getElementById(`group-stats-${gKey}`);
+    if (statsElem) {
+        statsElem.innerText = `Tổng số lớp: ${totalClasses} | Học sinh: ${totalStudents}`;
+    }
+}
+
 function addNewStudentToClass(classKey) {
     const classIdStr = classKey.replace(/\s+/g, '-');
     const nameInput = document.getElementById(`inputName-${classIdStr}`);
     const phoneInput = document.getElementById(`inputPhone-${classIdStr}`);
-    
     const name = nameInput.value.trim();
     const phone = phoneInput.value.trim().replace(/\s+/g, '') || 'Chưa có';
-
     if (name === '') { alert('Vui lòng nhập tên học viên!'); return; }
 
     const studentsList = bigClassesDatabase[classKey].students;
     const nextId = studentsList.length > 0 ? Math.max(...studentsList.map(s => s.id)) + 1 : 1;
-    
     studentsList.push({ id: nextId, name: name, phone: phone, status: 'present', note: '' });
     saveDatabaseState();
     
     nameInput.value = '';
     phoneInput.value = '';
-    
     const total = studentsList.length;
     const absent = studentsList.filter(s => s.status === 'absent').length;
     const present = total - absent;
     document.getElementById(`stats-${classIdStr}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
     document.getElementById(`absentList-${classIdStr}`).innerHTML = renderAbsentRowsHtml(studentsList);
     document.getElementById(`studentList-${classIdStr}`).innerHTML = renderStudentCardsHtml(classKey, studentsList);
+    
+    updateGroupStatsText(bigClassesDatabase[classKey].sheet);
 }
 
 function deleteStudentFromClass(classKey, studentId, studentName) {
     if (confirm(`Bạn có chắc chắn muốn XÓA học sinh [${studentName}] ra khỏi danh sách lớp [${classKey}]?`)) {
+        const targetSheet = bigClassesDatabase[classKey].sheet;
         bigClassesDatabase[classKey].students = bigClassesDatabase[classKey].students.filter(s => s.id !== studentId);
         bigClassesDatabase[classKey].students.forEach((s, idx) => { s.id = idx + 1; });
         saveDatabaseState();
@@ -584,10 +587,11 @@ function deleteStudentFromClass(classKey, studentId, studentName) {
         const total = studentsList.length;
         const absent = studentsList.filter(s => s.status === 'absent').length;
         const present = total - absent;
-        
         document.getElementById(`stats-${classIdStr}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
         document.getElementById(`absentList-${classIdStr}`).innerHTML = renderAbsentRowsHtml(studentsList);
         document.getElementById(`studentList-${classIdStr}`).innerHTML = renderStudentCardsHtml(classKey, studentsList);
+        
+        updateGroupStatsText(targetSheet);
     }
 }
 
@@ -597,10 +601,8 @@ function copyAbsentReport(classKey) {
     const absentStudents = students.filter(s => s.status === 'absent');
     const absentCount = absentStudents.length;
     const presentCount = total - absentCount;
-
     let text = 'LỚP: ' + classKey + '\n';
     text += 'Sĩ số: ' + total + ' (Có mặt: ' + presentCount + ' | Vắng: ' + absentCount + ')\n-------------------------\nDanh sách vắng:\n';
-    
     if (absentCount === 0) {
         text += '- Lớp đi học đủ.';
     } else {
@@ -616,14 +618,8 @@ function copyAbsentReport(classKey) {
 }
 
 async function saveDatabaseState() {
-
-    localStorage.setItem(
-        'big_classes_database',
-        JSON.stringify(bigClassesDatabase)
-    );
-
+    localStorage.setItem('big_classes_database', JSON.stringify(bigClassesDatabase));
     await window.saveToFirebase();
-
 }
 
 function callPhoneAction(phone) {
@@ -631,7 +627,6 @@ function callPhoneAction(phone) {
     window.location.href = 'tel:' + phone;
 }
 
-// KHU VỰC TÌM KIẾM TOÀN CỤC THÔNG MINH - CẬP NHẬT TỰ ĐỘNG MỞ ACCORDION KHI TÌM THẤY HỌC VIÊN
 function searchGlobalStudent() {
     const keyword = document.getElementById('globalSearchInput').value.trim().toLowerCase();
     const resultBox = document.getElementById('searchResultBox');
@@ -640,7 +635,6 @@ function searchGlobalStudent() {
     
     resultBody.innerHTML = "";
     resultBox.style.display = 'none';
-    
     document.querySelectorAll('.student-card').forEach(card => card.classList.remove('highlight-search'));
 
     if (keyword === "") return;
@@ -648,7 +642,7 @@ function searchGlobalStudent() {
 
     let matchCount = 0;
     let firstScrolledTargetId = null;
-    let matchedClasses = new Set(); // Lưu danh sách các lớp có kết quả tìm kiếm
+    let matchedClasses = new Set(); 
 
     Object.keys(bigClassesDatabase).forEach(classKey => {
         const students = bigClassesDatabase[classKey].students;
@@ -659,7 +653,7 @@ function searchGlobalStudent() {
             
             if (nameLower.includes(keyword) || nameLower.replace(/\s+/g, "").includes(keywordNoSpace) || phoneTho.includes(keyword)) {
                 matchCount++;
-                matchedClasses.add(classKey); // Đánh dấu lớp này có học viên trùng khớp
+                matchedClasses.add(classKey); 
                 
                 const cardDomId = `card-${classKey.replace(/\s+/g, '-')}-${student.id}`;
                 if (!firstScrolledTargetId) firstScrolledTargetId = cardDomId;
@@ -683,22 +677,29 @@ function searchGlobalStudent() {
         resultCount.innerText = `Tìm thấy ${matchCount} kết quả`;
         resultBox.style.display = 'block';
         
-        // TỰ ĐỘNG MỞ ACCORDION CỦA CÁC LỚP CÓ KẾT QUẢ TÌM KIẾM
+        // TỰ ĐỘNG MỞ CẢ KHỐI LỚN LẪN LỚP CON KHI TÌM KIẾM THẤY HỌC VIÊN
         matchedClasses.forEach(classKey => {
+            const classObj = bigClassesDatabase[classKey];
+            const groupInfo = getGroupKeyBySheet(classObj.sheet);
+            
+            // Mở khối lớn chứa lớp này
+            const groupWrapper = document.getElementById(`group-wrapper-${groupInfo.key}`);
+            if (groupWrapper) groupWrapper.classList.add('active');
+
+            // Mở accordion của chính lớp con đó
             const classWrapper = document.querySelector(`[data-classname-box="${classKey}"]`);
             if (classWrapper) {
-                classWrapper.classList.add('active'); // Mở accordion
+                classWrapper.classList.add('active');
             }
         });
-        
-        // Cuộn màn hình đến học viên đầu tiên tìm thấy
+
         if (firstScrolledTargetId) {
             setTimeout(() => {
                 const element = document.getElementById(firstScrolledTargetId);
                 if(element) {
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-            }, 100); // Trì hoãn nhẹ để DOM mở ra kịp thời
+            }, 150); // Trì hoãn nhẹ hơn một chút để cả Khối lẫn lớp kịp giãn DOM ra
         }
     } else {
         alert("Không tìm thấy học viên nào khớp với từ khóa tìm kiếm.");
@@ -720,16 +721,10 @@ function clearSystemCache() {
     }
 }
 </script>
+
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import {
-    getFirestore,
-    doc,
-    setDoc,
-    getDoc
-
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDbCF0pFsdXqD14Y-wjWLFoNCGfP1LBlD8",
@@ -742,12 +737,10 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
+
 window.saveToFirebase = async function () {
-
     try {
-
         await setDoc(
             doc(db, "system", "database"),
             {
@@ -756,67 +749,37 @@ window.saveToFirebase = async function () {
                 updatedAt: new Date().toISOString()
             }
         );
-
         console.log("Đã lưu Firebase");
-
     } catch (err) {
-
         console.error("Lỗi lưu Firebase:", err);
-
     }
-
 }
+
 window.loadFromFirebase = async function () {
-
     try {
-
         const docRef = doc(db, "system", "database");
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-
             const data = docSnap.data();
-
             bigClassesDatabase = data.database || {};
-			localStorage.setItem(
-    "big_classes_database",
-    JSON.stringify(bigClassesDatabase)
-);
-
+			localStorage.setItem("big_classes_database", JSON.stringify(bigClassesDatabase));
             if (data.filename) {
                 localStorage.setItem("big_classes_filename", data.filename);
             }
-
             renderFullSystemUI();
-
             console.log("Đã tải dữ liệu từ Firebase");
-
         } else {
-
             console.log("Chưa có dữ liệu trên Firebase");
-
         }
-
     } catch (err) {
-
         console.error("Lỗi đọc Firebase:", err);
-
     }
-
 }
 
-
-window.testFirebase = async function () {
-
-    await window.saveToFirebase();
-
-}
-
+window.testFirebase = async function () { await window.saveToFirebase(); }
 window.db = db;
-
 console.log("Đã kết nối Firebase");
-
-
 window.loadFromFirebase();
 </script>
 </body>
