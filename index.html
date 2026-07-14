@@ -474,8 +474,8 @@ function renderStudentCardsHtml(classKey, students) {
                 <div class="student-info-row">
                     <div class="student-meta">
                         <span class="student-name">${idx + 1}. ${student.name}</span>
-                        
-                    </div>
+                     <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
+</div>
                     <div class="student-actions-right">
                         <button class="btn-call" onclick="callPhoneAction('${student.phone}')">📞</button>
                         <button class="btn-delete" onclick="deleteStudentFromClass('${classKey}', ${student.id}, '${student.name.replace(/'/g, "\\'")}')">Xoá</button>
