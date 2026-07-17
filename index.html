@@ -154,10 +154,8 @@
 </div>
 
 <script>
-// Định nghĩa các sheet chứa dữ liệu danh sách học sinh[cite: 3]
 const targetDataSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "DH25", "DH26"];
 let masterStudentsDatabase = {}; 
-// Khởi tạo các thứ theo đúng thứ tự từ Thứ Hai đến Chủ Nhật
 let daySchedulesStructure = {
     "THU_2": { name: "Thứ Hai", classes: [] },
     "THU_3": { name: "Thứ Ba", classes: [] },
@@ -167,6 +165,9 @@ let daySchedulesStructure = {
     "THU_7": { name: "Thứ Bảy", classes: [] },
     "CHU_NHAT": { name: "Chủ Nhật", classes: [] }
 };
+
+// Mảng khóa cứng thứ tự phân định giao diện tránh lỗi Firebase đảo lộn vị trí map
+const hardcodedDayKeysOrder = ["THU_2", "THU_3", "THU_4", "THU_5", "THU_6", "THU_7", "CHU_NHAT"];
 
 function displayPhone(p) { 
     if(!p || p === 'Chưa có' || p === 'undefined') return 'Chưa có';
@@ -293,8 +294,8 @@ function startProcessingExcel(input) {
 
                     rows.forEach((row) => {
                         if (!row) return;
-                        let cellB = row[colBIndex = 1] ? row[1].toString().trim() : "";
-                        let cellP = row[colPIndex = 16] ? row[16].toString().trim() : "";
+                        let cellB = row[1] ? row[1].toString().trim() : "";
+                        let cellP = row[16] ? row[16].toString().trim() : "";
                         let cellB_lower = cellB.toLowerCase();
                         let cleanPhone = cellP.replace(/[^0-9]/g, "");
                         if (cleanPhone.length === 9 && !cleanPhone.startsWith("0")) cleanPhone = "0" + cleanPhone;
@@ -356,7 +357,7 @@ function startProcessingExcel(input) {
     reader.readAsArrayBuffer(file);
 }
 
-// Hàm đối chiếu thông minh chéo từ khóa tương đối từng từ một[cite: 2]
+// Hàm đối chiếu thông minh chéo từ khóa tương đối từng từ một
 function findStudentDataMatch(classNameKey) {
     let keys = Object.keys(masterStudentsDatabase);
     let str1 = classNameKey.toUpperCase().replace(/[^A-Z0-9]/g, " ");
@@ -378,16 +379,16 @@ function renderSystemUIByDay() {
     const mainContainer = document.getElementById("dynamicMainContainer");
     mainContainer.innerHTML = "";
 
-    let hasData = Object.keys(daySchedulesStructure).some(k => daySchedulesStructure[k].classes.length > 0);
+    let hasData = hardcodedDayKeysOrder.some(k => daySchedulesStructure[k] && daySchedulesStructure[k].classes.length > 0);
     if (!hasData) {
         mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Hệ thống đang đợi bạn nạp file Excel để phân chia lớp tự động theo cột!</div>';
         return;
     }
 
-    // Sắp xếp Thứ tự hiển thị theo Thứ Hai -> Chủ Nhật đã fix cứng ở daySchedulesStructure
-    Object.keys(daySchedulesStructure).forEach(dayKey => {
+    // Khóa chặt vòng lặp theo đúng thứ tự Thứ Hai -> Chủ Nhật đã thiết lập sẵn
+    hardcodedDayKeysOrder.forEach(dayKey => {
         const dayGroup = daySchedulesStructure[dayKey];
-        if (dayGroup.classes.length === 0) return; 
+        if (!dayGroup || dayGroup.classes.length === 0) return; 
 
         dayGroup.classes.sort((a, b) => a.rawText.localeCompare(b.rawText, "vi"));
 
@@ -397,7 +398,9 @@ function renderSystemUIByDay() {
         
         daySection.innerHTML = `
             <div class="group-accordion-header" onclick="toggleAccordion(this)">
-                <div class="group-main-title">${dayGroup.name}</div>
+                <div class="group-panel-title-wrapper">
+                    <div class="group-main-title">${dayGroup.name}</div>
+                </div>
                 <div class="group-stats" id="stats-summary-${dayKey}">Số lớp: ${dayGroup.classes.length}</div>
             </div>
             <div class="group-panel"></div>
