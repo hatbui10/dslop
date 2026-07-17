@@ -1,3 +1,13 @@
+📂 Mở File
+🔄 Reset
+↩ Undo
+↪ Redo
+⌨️ Phím nhanh
+HTML
+CSS
+JS
+💾 LƯU FILE
+CHẠY ▶
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -464,10 +474,10 @@ window.renderSystemUIByDay = function() {
                     <h3>Danh Sách Thành Viên Lớp</h3>
                     <br>
                     
-                    <div class="add-student-box">
-                        <input type="text" id="inputName-${safeId}" placeholder="Họ và tên học viên...">
-                        <input type="tel" id="inputPhone-${safeId}" placeholder="Số điện thoại...">
-                        <button class="btn-add" onclick="addNewStudentToUI('${clsObj.classNameKey}', '${safeId}')">+ Thêm học sinh</button>
+                    <div class="add-student-box" style=" display : none">
+                        <input type="text" id="inputName-${safeId}" placeholder="Họ và tên học viên..." hidden>
+                        <input type="tel" id="inputPhone-${safeId}" placeholder="Số điện thoại..." hidden>
+                        <button class="btn-add" onclick="addNewStudentToUI('${clsObj.classNameKey}', '${safeId}')" hidden>+ Thêm học sinh</button>
                     </div>
                     
                     <div class="absent-section">
