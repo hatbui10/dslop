@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bộ Lọc Học Viên Điểm Danh Chia Lớp</title>
+    <title>Hệ Thống Điểm Danh Phân Loại Theo Thứ và Khối</title>
     
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #050508; color: #e0e0e6; padding: 20px 8px; max-width: 600px; margin: 0 auto; }
+        body { background-color: #050508; color: #e0e0e6; padding: 30px 3px 20px 3px; max-width: 600px; margin: 0 auto; }
         
-        h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); font-size: 1.4rem; }
+        h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); font-size: 1.3rem; }
         h3 { color: #ff007f; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); font-size: 1.1rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         
         /* 📂 KHU VỰC TẢI FILE */
         .upload-card { background: #0a0a14; border: 1px solid #ffd700; border-radius: 6px; padding: 15px 10px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
-        .upload-card p { font-size: 0.85rem; color: #aaa; text-align: center; margin-bottom: 12px; }
         .btn-group-top { width: 100%; display: block; text-align: center; margin-bottom: 5px; }
         
         .custom-upload-btn { 
@@ -32,7 +31,7 @@
             text-transform: uppercase; text-align: center; box-shadow: 0 0 8px rgba(255, 0, 127, 0.2);
         }
         .btn-danger-top:active { background: #ff007f; color: #fff; }
-        .file-status { font-size: 0.85rem; color: #ffd700; text-align: center; margin-top: 12px; font-weight: bold; line-height: 1.3; }
+        .file-status { font-size: 0.85rem; color: #ffd700; text-align: center; margin-top: 12px; font-weight: bold; line-height: 1.3; white-space: pre-line; }
         
         /* ⏳ PROGRESS BAR */
         .progress-container { width: 100%; background-color: #050508; border: 1px solid #333; border-radius: 4px; margin: 10px 0; display: none; overflow: hidden; }
@@ -50,74 +49,69 @@
         .result-table { width: 100%; border-collapse: collapse; }
         .result-table th, .result-table td { border: 1px solid rgba(255, 0, 127, 0.2); padding: 8px 5px; text-align: left; font-size: 0.8rem; }
         .result-table th { background-color: #4a0025; color: #fff; text-transform: uppercase; font-size: 0.75rem; }
-        .result-table tr:nth-child(even) { background-color: rgba(255, 0, 127, 0.03); }
 
-        /* 📦 KHỐI NHÓM LỚP (GIAO DIỆN MỚI) */
-        .group-block-wrapper { margin-bottom: 20px; background: #04040a; border: 1px solid #ffd700; border-radius: 8px; overflow: hidden; box-shadow: 0 0 12px rgba(255, 215, 0, 0.05); }
-        .group-accordion-header { padding: 14px 12px; background: #111122; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; border-bottom: 2px solid #ffd700; display: flex; justify-content: space-between; align-items: center; }
-        .group-accordion-header:active { background: #1c1c38; }
-        .group-accordion-header::after { content: '▼'; color: #ffd700; font-size: 0.9rem; transition: transform 0.3s; margin-left: 10px; }
+        /* 📦 KHỐI NHÓM THỨ TRONG TUẦN */
+        .group-block-wrapper { margin-bottom: 15px; background: #04040a; border: 1px solid #00f0ff; border-radius: 6px; overflow: hidden; box-shadow: 0 0 10px rgba(0, 240, 255, 0.05); }
+        .group-accordion-header { padding: 14px 10px; background: #111122; cursor: pointer; user-select: none; border-bottom: 2px solid #00f0ff; display: flex; justify-content: space-between; align-items: center; }
+        .group-accordion-header::after { content: '▼'; color: #00f0ff; font-size: 0.85rem; transition: transform 0.3s; margin-left: 10px; }
         .group-block-wrapper.active .group-accordion-header::after { content: '▲'; }
-        .group-main-title { color: #ffd700; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-shadow: 0 0 8px rgba(255, 215, 0, 0.2); }
-        .group-stats { color: #aaa; font-size: 0.85rem; font-weight: bold; }
-        .group-panel { padding: 12px 6px; display: none; background: #06060c; }
+        .group-main-title { color: #00f0ff; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-shadow: 0 0 8px rgba(0, 240, 255, 0.2); }
+        .group-stats { color: #aaa; font-size: 0.8rem; font-weight: bold; }
+        .group-panel { padding: 10px 5px; display: none; background: #06060c; }
         .group-block-wrapper.active .group-panel { display: block; }
 
-        /* 🏫 KHỐI GIAO DIỆN CHÍNH & ACCORDION LỚP CON */
-        .class-block-wrapper { margin-bottom: 12px; background: #0a0a14; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
-        .class-accordion-header { padding: 12px 10px; background: #0d0d1f; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .class-accordion-header:active { background: #151530; }
-        .class-accordion-header::after { content: '▼'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #00f0ff; font-size: 0.8rem; transition: transform 0.3s; }
+        /* 🏫 KHỐI GIAO DIỆN LỚP CON */
+        .class-block-wrapper { margin-bottom: 10px; background: #0a0a14; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
+        .class-accordion-header { padding: 12px 10px; background: #0d0d1f; cursor: pointer; position: relative; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .class-accordion-header::after { content: '▼'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ffd700; font-size: 0.75rem; }
         .class-block-wrapper.active .class-accordion-header::after { content: '▲'; color: #00ff66; }
         
-        .class-sheet-badge { display: inline-block; background: #4a0025; color: #ff007f; border: 1px solid #ff007f; font-size: 0.7rem; font-weight: bold; padding: 1px 6px; border-radius: 3px; margin-bottom: 4px; text-transform: uppercase; }
-        .class-main-title { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.3); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-        .class-stats { text-align: left; color: #00ff66; font-size: 0.85rem; margin-top: 3px; font-weight: 500; }
+        .class-main-title { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: 1.05rem; text-transform: uppercase; font-weight: bold; margin-bottom: 2px; }
+        .class-schedule { color: #fff; font-size: 0.8rem; opacity: 0.8; margin-bottom: 3px; line-height: 1.3; }
+        .class-stats { text-align: left; color: #00ff66; font-size: 0.75rem; font-weight: 500; }
         
-        .class-panel { padding: 15px 8px; display: none; background: #0a0a14; }
+        .class-panel { padding: 12px 6px; display: none; background: #0a0a14; }
         .class-block-wrapper.active .class-panel { display: block; }
         
-        .add-student-box { display: flex; flex-direction: column; gap: 8px; background: #0d0d1a; border: 1px solid #ffd700; border-radius: 4px; padding: 12px 10px; margin-bottom: 15px; }
-        .add-student-box input { width: 100%; background: #050508; border: 1px solid #333; color: #fff; padding: 10px; font-size: 0.9rem; border-radius: 4px; outline: none; }
-        .add-student-box input:focus { border-color: #ffd700; }
-        .btn-add { background: #ffd700; color: #000; border: none; padding: 10px; font-weight: bold; font-size: 0.9rem; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
+        .add-student-box { display: flex; flex-direction: column; gap: 6px; background: #0d0d1a; border: 1px solid #ffd700; border-radius: 4px; padding: 10px; margin-bottom: 12px; }
+        .add-student-box input { width: 100%; background: #050508; border: 1px solid #333; color: #fff; padding: 8px; font-size: 0.85rem; border-radius: 4px; outline: none; }
+        .btn-add { background: #ffd700; color: #000; border: none; padding: 9px; font-weight: bold; font-size: 0.85rem; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
         
-        .absent-section { background: rgba(255, 0, 127, 0.05); border: 1px dashed #ff007f; border-radius: 4px; padding: 10px; margin-bottom: 20px; }
-        .absent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .absent-title { color: #ff007f; font-weight: bold; font-size: 0.9rem; }
-        .copy-btn { background: #ff007f; color: #fff; border: none; padding: 6px 12px; font-size: 0.8rem; font-weight: bold; border-radius: 3px; cursor: pointer; box-shadow: 0 0 8px #ff007f; }
-        .absent-list { list-style: none; font-size: 0.9rem; color: #ff55a5; line-height: 1.4; }
-        .absent-list li { padding: 3px 0; border-bottom: 1px solid rgba(255, 0, 127, 0.1); }
+        .absent-section { background: rgba(255, 0, 127, 0.05); border: 1px dashed #ff007f; border-radius: 4px; padding: 8px; margin-bottom: 15px; }
+        .absent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .absent-title { color: #ff007f; font-weight: bold; font-size: 0.85rem; }
+        .copy-btn { background: #ff007f; color: #fff; border: none; padding: 4px 10px; font-size: 0.75rem; font-weight: bold; border-radius: 3px; cursor: pointer; }
+        .absent-list { list-style: none; font-size: 0.85rem; color: #ff55a5; line-height: 1.4; }
         
-        .student-list { display: flex; flex-direction: column; gap: 10px; }
-        .student-card { background: #121224; border: 1px solid #333; border-left: 4px solid #00f0ff; border-radius: 4px; padding: 12px 10px; display: flex; flex-direction: column; gap: 10px; transition: background 0.2s; }
+        .student-list { display: flex; flex-direction: column; gap: 8px; }
+        .student-card { background: #121224; border: 1px solid #333; border-left: 4px solid #00f0ff; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
         .student-card.status-absent { border-left-color: #ff007f; background: #1a0813; }
         .student-card.status-present { border-left-color: #00ff66; background: #081a10; }
-        .student-card.highlight-search { border: 1px solid #ffd700 !important; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
+        .student-card.highlight-search { border: 1px solid #ffd700 !important; box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
         
-        .student-info-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #222; padding-bottom: 6px; }
-        .student-meta { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-        .student-name { font-weight: bold; font-size: 0.95rem; color: #fff; }
-        .student-phone { font-size: 0.8rem; color: #888; }
+        .student-info-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; border-bottom: 1px solid #222; padding-bottom: 4px; }
+        .student-meta { display: flex; flex-direction: column; flex: 1; }
+        .student-name { font-weight: bold; font-size: 0.9rem; color: #fff; }
+        .student-phone { font-size: 0.75rem; color: #888; }
         
         .student-actions-right { display: flex; gap: 5px; }
-        .btn-call { background: #ffd700; color: #000; padding: 8px 12px; font-size: 0.9rem; border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 0 5px #ffd700; }
-        .btn-delete { background: #4a0000; color: #ff3333; border: 1px solid #ff3333; padding: 8px 10px; font-size: 0.9rem; border-radius: 4px; cursor: pointer; }
+        .btn-call { background: #ffd700; color: #000; padding: 6px 10px; font-size: 0.8rem; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-delete { background: #4a0000; color: #ff3333; border: 1px solid #ff3333; padding: 6px 8px; font-size: 0.8rem; border-radius: 4px; cursor: pointer; }
         
         .student-controls-row { display: flex; gap: 6px; align-items: center; }
-        .btn-action { flex: 1; padding: 10px 3px; font-size: 0.8rem; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; text-align: center; color: #fff; background: #333; }
+        .btn-action { flex: 1; padding: 8px 2px; font-size: 0.75rem; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; text-align: center; color: #fff; background: #333; }
         .btn-absent { background: #4a0025; color: #ff007f; border: 1px solid #ff007f; }
-        .btn-absent.active { background: #ff007f; color: #fff; box-shadow: 0 0 10px #ff007f; }
+        .btn-absent.active { background: #ff007f; color: #fff; box-shadow: 0 0 8px #ff007f; }
         .btn-present { background: #003311; color: #00ff66; border: 1px solid #00ff66; }
-        .btn-present.active { background: #00ff66; color: #000; box-shadow: 0 0 10px #00ff66; }
-        .note-select { flex: 1.5; background: #1a1a3a; color: #00f0ff; border: 1px solid #00f0ff; padding: 9px 3px; font-size: 0.8rem; border-radius: 3px; outline: none; }
+        .btn-present.active { background: #00ff66; color: #000; box-shadow: 0 0 8px #00ff66; }
+        .note-select { flex: 1.4; background: #1a1a3a; color: #00f0ff; border: 1px solid #00f0ff; padding: 7px 2px; font-size: 0.75rem; border-radius: 3px; outline: none; }
         
-        .empty-alert { text-align: center; padding: 40px 10px; color: #555; font-style: italic; font-size: 0.95rem; }
+        .empty-alert { text-align: center; padding: 30px 10px; color: #555; font-style: italic; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-<h2>HỆ THỐNG QUẢN LÝ ĐIỂM DANH ĐỘNG</h2>
+<h2>HỆ THỐNG ĐIỂM DANH THEO CỘT SHEET L</h2>
 
 <div class="upload-card">
     <div class="btn-group-top">
@@ -133,8 +127,8 @@
 </div>
 
 <div class="search-box">
-    <input type="text" id="globalSearchInput" class="search-input" placeholder="Nhập tên hoặc số điện thoại để tìm nhanh..." onkeypress="handleSearchKeyPress(event)">
-    <button class="search-btn" onclick="searchGlobalStudent()">Tìm Kiếm</button>
+    <input type="text" id="globalSearchInput" class="search-input" placeholder="Nhập tên hoặc số điện thoại để tìm học viên..." onkeypress="handleSearchKeyPress(event)">
+    <button class="search-btn" onclick="searchGlobalStudent()">Tìm</button>
 </div>
 
 <div id="searchResultBox" class="search-result-panel">
@@ -156,12 +150,23 @@
 </div>
 
 <div id="dynamicMainContainer">
-    <div class="empty-alert">Danh sách trống. Hệ thống sẽ tự động vẽ giao diện HTML 1 sau khi bạn nạp file Excel thành công!</div>
+    <div class="empty-alert">Danh sách trống. Hệ thống đang đợi bạn nạp file Excel để phân chia lớp tự động theo cột!</div>
 </div>
 
 <script>
-const targetSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "DH25", "DH26"];
-let bigClassesDatabase = {};
+// Định nghĩa các sheet chứa dữ liệu danh sách học sinh[cite: 3]
+const targetDataSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "DH25", "DH26"];
+let masterStudentsDatabase = {}; 
+// Khởi tạo các thứ theo đúng thứ tự từ Thứ Hai đến Chủ Nhật
+let daySchedulesStructure = {
+    "THU_2": { name: "Thứ Hai", classes: [] },
+    "THU_3": { name: "Thứ Ba", classes: [] },
+    "THU_4": { name: "Thứ Tư", classes: [] },
+    "THU_5": { name: "Thứ Năm", classes: [] },
+    "THU_6": { name: "Thứ Sáu", classes: [] },
+    "THU_7": { name: "Thứ Bảy", classes: [] },
+    "CHU_NHAT": { name: "Chủ Nhật", classes: [] }
+};
 
 function displayPhone(p) { 
     if(!p || p === 'Chưa có' || p === 'undefined') return 'Chưa có';
@@ -174,10 +179,12 @@ window.onload = async function () {
     try {
         await window.loadFromFirebase();
     } catch (e) {
-        const cachedData = localStorage.getItem("big_classes_database");
-        if (cachedData) {
-            bigClassesDatabase = JSON.parse(cachedData);
-            renderFullSystemUI();
+        const cachedDb = localStorage.getItem("master_students_db");
+        const cachedStruct = localStorage.getItem("day_schedules_struct");
+        if (cachedDb && cachedStruct) {
+            masterStudentsDatabase = JSON.parse(cachedDb);
+            daySchedulesStructure = JSON.parse(cachedStruct);
+            renderSystemUIByDay();
         }
     }
 }
@@ -186,65 +193,99 @@ function startProcessingExcel(input) {
     const file = input.files[0];
     if (!file) return;
 
-    document.getElementById('fileStatusMessage').style.color = "#ffd700";
-    document.getElementById('fileStatusMessage').innerText = `Đang xử lý phân tách lớp từ tệp: ${file.name}...`;
-    document.getElementById('searchResultBox').style.display = 'none';
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    progressContainer.style.display = 'block';
-    progressBar.style.width = '0%';
-    progressBar.innerText = '0%';
+    document.getElementById('fileStatusMessage').innerText = "Đang bóc tách riêng từng cột của Thứ trong Sheet L...";
+    document.getElementById('progressContainer').style.display = 'block';
+    document.getElementById('progressBar').style.width = '10%';
 
-    bigClassesDatabase = {};
+    masterStudentsDatabase = {};
+    Object.keys(daySchedulesStructure).forEach(k => daySchedulesStructure[k].classes = []);
+
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
             const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array', cellStyles: true });
+            const workbook = XLSX.read(data, { type: 'array' });
             
-            const sheetsToProcess = workbook.SheetNames.filter(name => targetSheets.includes(name.trim()));
-            if (sheetsToProcess.length === 0) {
-                alert("Không tìm thấy các sheet mục tiêu (SV, 12, 11... DH26) trong file Excel của bạn!");
-                progressContainer.style.display = 'none';
+            const sheetL = workbook.Sheets["L"];
+            if (!sheetL) {
+                alert("Không tìm thấy Sheet 'L'!");
+                document.getElementById('progressContainer').style.display = 'none';
                 return;
             }
 
+            const rowsL = XLSX.utils.sheet_to_json(sheetL, { header: 1, raw: false });
+            if (rowsL.length > 0) {
+                let colToDayMap = {};
+                
+                let foundDaysRow = false;
+                for (let r = 0; r < Math.min(rowsL.length, 5); r++) {
+                    const currentRow = rowsL[r] || [];
+                    for (let c = 0; c < currentRow.length; c++) {
+                        let cellVal = currentRow[c] ? currentRow[c].toString().trim().toUpperCase() : "";
+                        if (cellVal.includes("THỨ 2") || cellVal === "T2") { colToDayMap[c] = "THU_2"; foundDaysRow = true; }
+                        else if (cellVal.includes("THỨ 3") || cellVal === "T3") { colToDayMap[c] = "THU_3"; foundDaysRow = true; }
+                        else if (cellVal.includes("THỨ 4") || cellVal === "T4") { colToDayMap[c] = "THU_4"; foundDaysRow = true; }
+                        else if (cellVal.includes("THỨ 5") || cellVal === "T5") { colToDayMap[c] = "THU_5"; foundDaysRow = true; }
+                        else if (cellVal.includes("THỨ 6") || cellVal === "T6") { colToDayMap[c] = "THU_6"; foundDaysRow = true; }
+                        else if (cellVal.includes("THỨ 7") || cellVal === "T7") { colToDayMap[c] = "THU_7"; foundDaysRow = true; }
+                        else if (cellVal.includes("CN") || cellVal.includes("CHỦ NHẬT")) { colToDayMap[c] = "CHU_NHAT"; foundDaysRow = true; }
+                    }
+                    if (foundDaysRow) break;
+                }
+
+                rowsL.forEach((row, rIdx) => {
+                    row.forEach((cell, cIdx) => {
+                        if (!cell) return;
+                        let text = cell.toString().trim();
+                        let textLower = text.toLowerCase();
+                        
+                        if (textLower.includes("sun") || textLower.includes("kid") || textLower.includes("like") || textLower.includes("kind") || textLower.includes("svip") || text.startsWith("E")) {
+                            let dayKey = colToDayMap[cIdx];
+                            if (dayKey) {
+                                let cleanClassName = text.split("\n")[0].trim();
+                                
+                                let isExist = daySchedulesStructure[dayKey].classes.some(c => c.rawText === text);
+                                if (!isExist && cleanClassName.length > 1) {
+                                    daySchedulesStructure[dayKey].classes.push({
+                                        classNameKey: cleanClassName,
+                                        rawText: text
+                                    });
+                                }
+                            }
+                        }
+                    });
+                });
+            }
+
+            document.getElementById('progressBar').style.width = '40%';
+            document.getElementById('fileStatusMessage').innerText = "Đang nạp danh sách học sinh từ các Sheet khối...";
+
+            const sheetsToProcess = workbook.SheetNames.filter(name => targetDataSheets.includes(name.trim()));
             let totalSheets = sheetsToProcess.length;
             let currentSheetIdx = 0;
 
             async function parseSheetStep() {
                 if (currentSheetIdx >= totalSheets) {
-                    progressBar.style.width = '100%';
-                    progressBar.innerText = '100% Hoàn thành';
+                    document.getElementById('progressBar').style.width = '100%';
                     
-                    let totalStudentsCount = 0;
-                    Object.keys(bigClassesDatabase).forEach(classKey => {
-                        totalStudentsCount += bigClassesDatabase[classKey].students.length;
-                    });
-                    document.getElementById('fileStatusMessage').style.color = "#00ff66";
-                    document.getElementById('fileStatusMessage').innerText = `✅ Nạp thành công! Tìm thấy tổng cộng ${totalStudentsCount} học viên.\nĐã vẽ xong Form Quản Lý cho tất cả các lớp.`;
-                    
-                    localStorage.setItem('big_classes_database', JSON.stringify(bigClassesDatabase));
+                    localStorage.setItem('master_students_db', JSON.stringify(masterStudentsDatabase));
+                    localStorage.setItem('day_schedules_struct', JSON.stringify(daySchedulesStructure));
                     localStorage.setItem('big_classes_filename', file.name);
                     
-					await saveDatabaseState();
-                    renderFullSystemUI();
+                    await saveDatabaseState();
+                    renderSystemUIByDay();
+
+                    let countTotal = 0;
+                    Object.keys(masterStudentsDatabase).forEach(k => countTotal += masterStudentsDatabase[k].students.length);
+                    document.getElementById('fileStatusMessage').innerText = `✅ Đã phân tách thành công lịch trình theo từng cột!\nTập hợp được tổng số ${countTotal} học sinh từ các khối.`;
                     return;
                 }
-
-                let percent = Math.round((currentSheetIdx / totalSheets) * 100);
-                progressBar.style.width = percent + '%';
-                progressBar.innerText = percent + '%';
 
                 const sheetName = sheetsToProcess[currentSheetIdx];
                 const sheet = workbook.Sheets[sheetName];
                 const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false });
                 
                 if (rows.length > 0) {
-                    const colAIndex = 0;
-                    const colBIndex = 1;
-                    const colPIndex = 16;
-
                     let detectedClassName = "";
                     let detectedSchedule = "";
                     let previousText = "";
@@ -252,28 +293,18 @@ function startProcessingExcel(input) {
 
                     rows.forEach((row) => {
                         if (!row) return;
-
-                        let cellA = row[colAIndex] ? row[colAIndex].toString().trim() : "";
-                        let cellB = row[colBIndex] ? row[colBIndex].toString().trim() : "";
-                        let cellP = row[colPIndex] ? row[colPIndex].toString().trim() : "";
-
+                        let cellB = row[colBIndex = 1] ? row[1].toString().trim() : "";
+                        let cellP = row[colPIndex = 16] ? row[16].toString().trim() : "";
                         let cellB_lower = cellB.toLowerCase();
                         let cleanPhone = cellP.replace(/[^0-9]/g, "");
-                    
-                        if (cleanPhone.length === 9 && !cleanPhone.startsWith("0")) {
-                            cleanPhone = "0" + cleanPhone;
-                        }
+                        if (cleanPhone.length === 9 && !cleanPhone.startsWith("0")) cleanPhone = "0" + cleanPhone;
 
-                        if (cellB === "" || cellB_lower === "tên học sinh" || cellB_lower === "tên hs" || cellB_lower === "họ và tên") {
-                            return;
-                        }
+                        if (cellB === "" || cellB_lower === "tên học sinh" || cellB_lower === "tên hs" || cellB_lower === "họ và tên" || cellB_lower === "tt") return;
 
                         const isSchedule = /^t[2-7]/i.test(cellB) || /^cn/i.test(cellB) || /18h|19h|20h/i.test(cellB) || cellB.includes("THỨ");
 
                         if (isSchedule) {
-                            if (previousText) {
-                                detectedClassName = previousText;
-                            }
+                            if (previousText) detectedClassName = previousText;
                             detectedSchedule = cellB;
                             readingStudents = true;
                             return;
@@ -281,17 +312,17 @@ function startProcessingExcel(input) {
 
                         if (readingStudents) {
                             if (cellB && !/^\d+$/.test(cellB) && cleanPhone.length >= 9 && cleanPhone.length <= 11) {
-                                let currentClassKey = detectedClassName ;
-                                if (!bigClassesDatabase[currentClassKey]) {
-                                    bigClassesDatabase[currentClassKey] = {
+                                let classKeyUpper = (detectedClassName || "LỚP CHƯA ĐẶT TÊN").toUpperCase();
+                                if (!masterStudentsDatabase[classKeyUpper]) {
+                                    masterStudentsDatabase[classKeyUpper] = {
                                         sheet: sheetName,
                                         schedule: detectedSchedule,
                                         students: []
                                     };
                                 }
 
-                                bigClassesDatabase[currentClassKey].students.push({
-                                    id: bigClassesDatabase[currentClassKey].students.length + 1,
+                                masterStudentsDatabase[classKeyUpper].students.push({
+                                    id: masterStudentsDatabase[classKeyUpper].students.length + 1,
                                     name: cellB,
                                     phone: cleanPhone,
                                     status: "present",
@@ -299,7 +330,6 @@ function startProcessingExcel(input) {
                                 });
                                 return;
                             }
-
                             if (cellB && cleanPhone.length < 9) {
                                 readingStudents = false;
                                 previousText = cellB;
@@ -307,151 +337,126 @@ function startProcessingExcel(input) {
                             }
                             return;
                         }
-
-                        if (cellB && cleanPhone.length < 9) {
-                            previousText = cellB;
-                        }
+                        if (cellB && cleanPhone.length < 9) previousText = cellB;
                     });
                 }
+
                 currentSheetIdx++;
-                setTimeout(parseSheetStep, 10);
+                let percent = Math.round((currentSheetIdx / totalSheets) * 60) + 40;
+                document.getElementById('progressBar').style.width = percent + '%';
+                setTimeout(parseSheetStep, 15);
             }
             parseSheetStep();
+
         } catch (err) {
             console.error(err);
-            alert("Lỗi khi đọc dữ liệu từ file Excel!");
-            document.getElementById('progressContainer').style.display = 'none';
+            alert("Lỗi cấu trúc tệp Excel!");
         }
     };
     reader.readAsArrayBuffer(file);
 }
 
-function toggleClassAccordion(headerElement) {
-    const wrapper = headerElement.parentElement;
-    wrapper.classList.toggle('active');
+// Hàm đối chiếu thông minh chéo từ khóa tương đối từng từ một[cite: 2]
+function findStudentDataMatch(classNameKey) {
+    let keys = Object.keys(masterStudentsDatabase);
+    let str1 = classNameKey.toUpperCase().replace(/[^A-Z0-9]/g, " ");
+    let words1 = str1.split(/\s+/).filter(w => w.length > 1 && w !== "LỚP" && w !== "KHỐI");
+
+    for (let k of keys) {
+        let str2 = k.toUpperCase().replace(/[^A-Z0-9]/g, " ");
+        let words2 = str2.split(/\s+/).filter(w => w.length > 1);
+        
+        let intersect = words1.filter(w => words2.includes(w));
+        if (intersect.some(w => !/^\d+$/.test(w) && w !== "SL" && w !== "GV")) {
+            return { fullKey: k, data: masterStudentsDatabase[k] };
+        }
+    }
+    return null;
 }
 
-// HÀM CLICK ĐÓNG MỞ ACCORDION KHỐI LỚN
-function toggleGroupAccordion(headerElement) {
-    const wrapper = headerElement.parentElement;
-    wrapper.classList.toggle('active');
-}
-
-// THUẬT TOÁN ĐỊNH NGHĨA KHỐI CHO LỚP HỌC HỆ THỐNG
-function getGroupKeyBySheet(sheetName) {
-    const s = sheetName.trim();
-    if (["2", "3", "4", "5"].includes(s)) return { key: "TIEU_HOC", name: "Khối Tiểu Học (Lớp 2-5)" };
-    if (["6", "7", "8", "9"].includes(s)) return { key: "THCS", name: "Khối THCS (Lớp 6-9)" };
-    if (["10", "11", "12"].includes(s)) return { key: "THPT", name: "Khối THPT (Lớp 10-12)" };
-    if (["DH25", "DH26"].includes(s)) return { key: "DAI_HOC", name: "Khối Đại Học (DH25-26)" };
-    return { key: "KHAC", name: "Khối Khác / Sinh Viên" };
-}
-
-function renderFullSystemUI() {
+function renderSystemUIByDay() {
     const mainContainer = document.getElementById("dynamicMainContainer");
     mainContainer.innerHTML = "";
 
-    const classKeys = Object.keys(bigClassesDatabase);
-    if (classKeys.length === 0) {
-        mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Hệ thống sẽ tự động vẽ giao diện HTML 1 sau khi bạn nạp file Excel thành công!</div>';
+    let hasData = Object.keys(daySchedulesStructure).some(k => daySchedulesStructure[k].classes.length > 0);
+    if (!hasData) {
+        mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Hệ thống đang đợi bạn nạp file Excel để phân chia lớp tự động theo cột!</div>';
         return;
     }
 
-    // Sắp xếp các lớp con
-    classKeys.sort((a, b) => {
-        const order = ["SV","2","3","4","5","6","7","8","9","10","11","12","DH25","DH26"];
-        const sa = bigClassesDatabase[a].sheet;
-        const sb = bigClassesDatabase[b].sheet;
-        const ia = order.indexOf(sa);
-        const ib = order.indexOf(sb);
-        if (ia !== ib) return ia - ib;
-        return a.localeCompare(b, "vi");
-    });
+    // Sắp xếp Thứ tự hiển thị theo Thứ Hai -> Chủ Nhật đã fix cứng ở daySchedulesStructure
+    Object.keys(daySchedulesStructure).forEach(dayKey => {
+        const dayGroup = daySchedulesStructure[dayKey];
+        if (dayGroup.classes.length === 0) return; 
 
-    // Gom nhóm cấu trúc dữ liệu theo Khối
-    const groupedData = {
-        "TIEU_HOC": { name: "Khối Tiểu Học (Lớp 2-5)", classes: [], totalStudents: 0 },
-        "THCS": { name: "Khối THCS (Lớp 6-9)", classes: [], totalStudents: 0 },
-        "THPT": { name: "Khối THPT (Lớp 10-12)", classes: [], totalStudents: 0 },
-        "DAI_HOC": { name: "Khối Đại Học", classes: [], totalStudents: 0 },
-        "KHAC": { name: "Khối Khác / Khối SV", classes: [], totalStudents: 0 }
-    };
+        dayGroup.classes.sort((a, b) => a.rawText.localeCompare(b.rawText, "vi"));
 
-    classKeys.forEach(classKey => {
-        const classObj = bigClassesDatabase[classKey];
-        const groupInfo = getGroupKeyBySheet(classObj.sheet);
-        groupedData[groupInfo.key].classes.push({ key: classKey, data: classObj });
-        groupedData[groupInfo.key].totalStudents += classObj.students.length;
-    });
-
-    // Vẽ giao diện phân bổ theo Khối
-    const groupOrder = ["TIEU_HOC", "THCS", "THPT", "DAI_HOC", "KHAC"];
-    groupOrder.forEach(gKey => {
-        const group = groupedData[gKey];
-        if (group.classes.length === 0) return; // Khối nào không có lớp thì ẩn đi hoàn toàn
-
-        const groupSection = document.createElement("div");
-        groupSection.className = "group-block-wrapper";
-        groupSection.id = `group-wrapper-${gKey}`;
+        const daySection = document.createElement("div");
+        daySection.className = "group-block-wrapper";
+        daySection.id = `day-wrapper-${dayKey}`;
         
-        // Tạo header cho Khối lớn
-        groupSection.innerHTML = `
-            <div class="group-accordion-header" onclick="toggleGroupAccordion(this)">
-                <div class="group-main-title">${group.name}</div>
-                <div class="group-stats" id="group-stats-${gKey}">Tổng số lớp: ${group.classes.length} | Học sinh: ${group.totalStudents}</div>
+        daySection.innerHTML = `
+            <div class="group-accordion-header" onclick="toggleAccordion(this)">
+                <div class="group-main-title">${dayGroup.name}</div>
+                <div class="group-stats" id="stats-summary-${dayKey}">Số lớp: ${dayGroup.classes.length}</div>
             </div>
-            <div class="group-panel" id="group-panel-${gKey}"></div>
+            <div class="group-panel"></div>
         `;
-        mainContainer.appendChild(groupSection);
+        mainContainer.appendChild(daySection);
+        const groupPanel = daySection.querySelector(".group-panel");
 
-        const groupPanel = groupSection.querySelector(".group-panel");
+        dayGroup.classes.forEach((clsObj, idx) => {
+            const studentMatch = findStudentDataMatch(clsObj.classNameKey);
+            let studentList = [];
+            let scheduleText = clsObj.rawText; 
 
-        // Duyệt và vẽ từng lớp con thuộc Khối này
-        group.classes.forEach(cls => {
-            const classKey = cls.key;
-            const classObj = cls.data;
-            const students = classObj.students;
-            
-            const total = students.length;
-            const absent = students.filter(s => s.status === 'absent').length;
+            if (studentMatch) {
+                studentList = studentMatch.data.students;
+            }
+
+            const total = studentList.length;
+            const absent = studentList.filter(s => s.status === 'absent').length;
             const present = total - absent;
+            const safeId = `${dayKey}-${idx}`;
 
             const classSection = document.createElement("div");
             classSection.className = "class-block-wrapper";
-            classSection.setAttribute("data-classname-box", classKey);
+            classSection.setAttribute("id", `class-wrapper-${safeId}`);
+            classSection.setAttribute("data-classname-box", clsObj.classNameKey);
 
             classSection.innerHTML = `
-                <div class="class-accordion-header" onclick="toggleClassAccordion(this)">
-                    <div class="class-main-title">Lớp: ${classKey}</div>
-                    <div class="class-schedule">${classObj.schedule || ""}</div>
-                    <div class="class-stats" id="stats-${classKey.replace(/\s+/g, '-')}">Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}</div>
+                <div class="class-accordion-header" onclick="toggleAccordion(this)">
+                    <div class="class-main-title">${clsObj.classNameKey}</div>
+                    <div class="class-schedule">${scheduleText}</div>
+                    <div class="class-stats" id="stats-display-${safeId}">Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}</div>
                 </div>
                 
                 <div class="class-panel">
-                    <h3>Danh Sách Chi Tiết</h3>
+                    <h3>Danh Sách Thành Viên Lớp</h3>
                     <br>
                     
                     <div class="add-student-box">
-                        <input type="text" id="inputName-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 1: Nhập họ và tên...">
-                        <input type="tel" id="inputPhone-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 2: Nhập số điện thoại...">
-                        <button class="btn-add" onclick="addNewStudentToClass('${classKey}')">+ Thêm vào danh sách</button>
+                        <input type="text" id="inputName-${safeId}" placeholder="Họ và tên học viên...">
+                        <input type="tel" id="inputPhone-${safeId}" placeholder="Số điện thoại...">
+                        <button class="btn-add" onclick="addNewStudentToUI('${clsObj.classNameKey}', '${safeId}')">+ Thêm học sinh</button>
                     </div>
                     
                     <div class="absent-section">
                         <div class="absent-header">
-                            <span class="absent-title">DANH SÁCH VẮNG HÔM NAY</span>
-                            <button class="copy-btn" onclick="copyAbsentReport('${classKey}')">Copy</button>
+                            <span class="absent-title">HỌC VIÊN VẮNG MẶT HÔM NAY</span>
+                            <button class="copy-btn" onclick="copyAbsentReport('${clsObj.classNameKey}', '${scheduleText}')">Copy nhanh</button>
                         </div>
-                        <ul class="absent-list" id="absentList-${classKey.replace(/\s+/g, '-')}">
-                            ${renderAbsentRowsHtml(students)}
+                        <ul class="absent-list" id="absentList-${safeId}">
+                            ${renderAbsentRowsHtml(studentList)}
                         </ul>
                     </div>
                     
-                    <div class="student-list" id="studentList-${classKey.replace(/\s+/g, '-')}">
-                        ${renderStudentCardsHtml(classKey, students)}
+                    <div class="student-list" id="studentList-${safeId}">
+                        ${renderStudentCardsHtml(clsObj.classNameKey, safeId, studentList)}
                     </div>
                 </div>
             `;
+            classSection.querySelector('.class-panel').onclick = (e) => e.stopPropagation();
             groupPanel.appendChild(classSection);
         });
     });
@@ -459,41 +464,39 @@ function renderFullSystemUI() {
 
 function renderAbsentRowsHtml(students) {
     const absentStudents = students.filter(s => s.status === 'absent');
-    if (absentStudents.length === 0) return '<li><em>Chưa có học sinh vắng</em></li>';
+    if (absentStudents.length === 0) return '<li><em>Chưa ghi nhận học sinh vắng</em></li>';
     return absentStudents.map(s => `<li>• ${s.name} ${s.note ? '(' + s.note + ')' : '(Chưa rõ lý do)'}</li>`).join('');
 }
 
-function renderStudentCardsHtml(classKey, students) {
+function renderStudentCardsHtml(classNameKey, safeId, students) {
+    if (students.length === 0) return '<div class="empty-alert">Không tìm thấy dữ liệu danh sách lớp từ các sheet khối. Bạn có thể thêm học sinh thủ công ở trên!</div>';
+    
     return students.map((student, idx) => {
         const absentActive = student.status === 'absent' ? 'active' : '';
         const presentActive = student.status === 'present' ? 'active' : '';
-        const cardId = `card-${classKey.replace(/\s+/g, '-')}-${student.id}`;
+        const cardId = `card-${safeId}-${student.id}`;
 
         return `
             <div class="student-card status-${student.status}" id="${cardId}">
                 <div class="student-info-row">
                     <div class="student-meta">
                         <span class="student-name">${idx + 1}. ${student.name}</span>
-                     <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
-</div>
+                        <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
+                    </div>
                     <div class="student-actions-right">
                         <button class="btn-call" onclick="callPhoneAction('${student.phone}')">📞</button>
-                        <button class="btn-delete" onclick="deleteStudentFromClass('${classKey}', ${student.id}, '${student.name.replace(/'/g, "\\'")}')">Xoá</button>
+                        <button class="btn-delete" onclick="deleteStudent('${classNameKey}', ${student.id}, '${safeId}')">Xoá</button>
                     </div>
                 </div>
                 <div class="student-controls-row">
-                    <button class="btn-action btn-absent ${absentActive}" onclick="updateStudentStatus('${classKey}', ${student.id}, 'absent')">Vắng</button>
-                    <button class="btn-action btn-present ${presentActive}" onclick="updateStudentStatus('${classKey}', ${student.id}, 'present')">Đi Học</button>
-                    <select class="note-select" onchange="updateStudentNote('${classKey}', ${student.id}, this.value)">
+                    <button class="btn-action btn-absent ${absentActive}" onclick="updateStudentStatus('${classNameKey}', ${student.id}, 'absent')">Vắng</button>
+                    <button class="btn-action btn-present ${presentActive}" onclick="updateStudentStatus('${classNameKey}', ${student.id}, 'present')">Đi Học</button>
+                    <select class="note-select" onchange="updateStudentNote('${classNameKey}', ${student.id}, this.value)">
                         <option value="" ${student.note===''?'selected':''}>-- Ghi chú --</option>
                         <option value="***" ${student.note==='***'?'selected':''}>***</option>
                         <option value="Đi muộn" ${student.note==='Đi muộn'?'selected':''}>Đi muộn</option>
                         <option value="Không nghe máy" ${student.note==='Không nghe máy'?'selected':''}>Không nghe máy</option>
                         <option value="Nghỉ hôm nay" ${student.note==='Nghỉ hôm nay'?'selected':''}>Nghỉ hôm nay</option>
-                        <option value="Nghỉ tuần này" ${student.note==='Nghỉ tuần này'?'selected':''}>Nghỉ tuần này</option>
-                        <option value="Khi nào đi học sẽ báo lại" ${student.note==='Khi nào đi học sẽ báo lại'?'selected':''}>Khi nào đi học sẽ báo lại</option>
-                        <option value="Nghỉ hết tháng 7" ${student.note==='Nghỉ hết tháng 7'?'selected':''}>Nghỉ hết tháng 7</option>
-                        <option value="Xin nghỉ hẳn" ${student.note==='Xin nghỉ hẳn'?'selected':''}>Xin nghỉ hẳn</option>
                         <option value="Ốm" ${student.note==='Ốm'?'selected':''}>Ốm đau</option>
                     </select>
                 </div>
@@ -502,128 +505,112 @@ function renderStudentCardsHtml(classKey, students) {
     }).join('');
 }
 
-function updateStudentStatus(classKey, studentId, status) {
-    let student = bigClassesDatabase[classKey].students.find(s => s.id === studentId);
-    if (student) {
-        student.status = status;
-        saveDatabaseState();
-        
-        const classKeyId = classKey.replace(/\s+/g, '-');
-        const studentsArr = bigClassesDatabase[classKey].students;
-        
-        const total = studentsArr.length;
-        const absent = studentsArr.filter(s => s.status === 'absent').length;
-        const present = total - absent;
-        
-        document.getElementById(`stats-${classKeyId}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
-        document.getElementById(`absentList-${classKeyId}`).innerHTML = renderAbsentRowsHtml(studentsArr);
-        document.getElementById(`studentList-${classKeyId}`).innerHTML = renderStudentCardsHtml(classKey, studentsArr);
-    }
+function toggleAccordion(element) {
+    element.parentElement.classList.toggle('active');
 }
 
-function updateStudentNote(classKey, studentId, value) {
-    let student = bigClassesDatabase[classKey].students.find(s => s.id === studentId);
-    if (student) {
-        student.note = value;
-        saveDatabaseState();
-        document.getElementById(`absentList-${classKey.replace(/\s+/g, '-')}`).innerHTML = renderAbsentRowsHtml(bigClassesDatabase[classKey].students);
-    }
-}
-
-function updateGroupStatsText(sheetName) {
-    const groupInfo = getGroupKeyBySheet(sheetName);
-    const gKey = groupInfo.key;
-    
-    let totalClasses = 0;
-    let totalStudents = 0;
-    
-    Object.keys(bigClassesDatabase).forEach(key => {
-        if (getGroupKeyBySheet(bigClassesDatabase[key].sheet).key === gKey) {
-            totalClasses++;
-            totalStudents += bigClassesDatabase[key].students.length;
+function updateStudentStatus(classNameKey, studentId, status) {
+    let match = findStudentDataMatch(classNameKey);
+    if (match) {
+        let student = match.data.students.find(s => s.id === studentId);
+        if (student) {
+            student.status = status;
+            saveDatabaseState();
+            renderFullSystemUIUpdate();
         }
-    });
-    
-    const statsElem = document.getElementById(`group-stats-${gKey}`);
-    if (statsElem) {
-        statsElem.innerText = `Tổng số lớp: ${totalClasses} | Học sinh: ${totalStudents}`;
     }
 }
 
-function addNewStudentToClass(classKey) {
-    const classIdStr = classKey.replace(/\s+/g, '-');
-    const nameInput = document.getElementById(`inputName-${classIdStr}`);
-    const phoneInput = document.getElementById(`inputPhone-${classIdStr}`);
+function updateStudentNote(classNameKey, studentId, value) {
+    let match = findStudentDataMatch(classNameKey);
+    if (match) {
+        let student = match.data.students.find(s => s.id === studentId);
+        if (student) {
+            student.note = value;
+            saveDatabaseState();
+            renderFullSystemUIUpdate();
+        }
+    }
+}
+
+function addNewStudentToUI(classNameKey, safeId) {
+    const nameInput = document.getElementById(`inputName-${safeId}`);
+    const phoneInput = document.getElementById(`inputPhone-${safeId}`);
     const name = nameInput.value.trim();
     const phone = phoneInput.value.trim().replace(/\s+/g, '') || 'Chưa có';
-    if (name === '') { alert('Vui lòng nhập tên học viên!'); return; }
+    if (name === '') { alert('Vui lòng điền tên học sinh!'); return; }
 
-    const studentsList = bigClassesDatabase[classKey].students;
+    let match = findStudentDataMatch(classNameKey);
+    if (!match) {
+        let upper = classNameKey.toUpperCase();
+        masterStudentsDatabase[upper] = { sheet: "Thêm thủ công", schedule: "", students: [] };
+        match = { data: masterStudentsDatabase[upper] };
+    }
+
+    const studentsList = match.data.students;
     const nextId = studentsList.length > 0 ? Math.max(...studentsList.map(s => s.id)) + 1 : 1;
     studentsList.push({ id: nextId, name: name, phone: phone, status: 'present', note: '' });
+    
     saveDatabaseState();
-    
-    nameInput.value = '';
-    phoneInput.value = '';
-    const total = studentsList.length;
-    const absent = studentsList.filter(s => s.status === 'absent').length;
-    const present = total - absent;
-    document.getElementById(`stats-${classIdStr}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
-    document.getElementById(`absentList-${classIdStr}`).innerHTML = renderAbsentRowsHtml(studentsList);
-    document.getElementById(`studentList-${classIdStr}`).innerHTML = renderStudentCardsHtml(classKey, studentsList);
-    
-    updateGroupStatsText(bigClassesDatabase[classKey].sheet);
+    renderFullSystemUIUpdate();
 }
 
-function deleteStudentFromClass(classKey, studentId, studentName) {
-    if (confirm(`Bạn có chắc chắn muốn XÓA học sinh [${studentName}] ra khỏi danh sách lớp [${classKey}]?`)) {
-        const targetSheet = bigClassesDatabase[classKey].sheet;
-        bigClassesDatabase[classKey].students = bigClassesDatabase[classKey].students.filter(s => s.id !== studentId);
-        bigClassesDatabase[classKey].students.forEach((s, idx) => { s.id = idx + 1; });
+function deleteStudent(classNameKey, studentId, safeId) {
+    let match = findStudentDataMatch(classNameKey);
+    if (match && confirm("Bạn có chắc chắn muốn xóa học sinh này khỏi danh sách lớp học?")) {
+        match.data.students = match.data.students.filter(s => s.id !== studentId);
+        match.data.students.forEach((s, idx) => s.id = idx + 1);
         saveDatabaseState();
-        
-        const classIdStr = classKey.replace(/\s+/g, '-');
-        const studentsList = bigClassesDatabase[classKey].students;
-        const total = studentsList.length;
-        const absent = studentsList.filter(s => s.status === 'absent').length;
-        const present = total - absent;
-        document.getElementById(`stats-${classIdStr}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
-        document.getElementById(`absentList-${classIdStr}`).innerHTML = renderAbsentRowsHtml(studentsList);
-        document.getElementById(`studentList-${classIdStr}`).innerHTML = renderStudentCardsHtml(classKey, studentsList);
-        
-        updateGroupStatsText(targetSheet);
+        renderFullSystemUIUpdate();
     }
 }
 
-function copyAbsentReport(classKey) {
-    const students = bigClassesDatabase[classKey].students;
-    const total = students.length;
+function renderFullSystemUIUpdate() {
+    const openedDomIds = [];
+    document.querySelectorAll('.class-block-wrapper.active, .group-block-wrapper.active').forEach(el => {
+        if (el.id) openedDomIds.push(el.id);
+    });
+
+    renderSystemUIByDay();
+
+    openedDomIds.forEach(id => {
+        let target = document.getElementById(id);
+        if (target) target.classList.add('active');
+    });
+}
+
+function copyAbsentReport(classNameKey, titleText) {
+    let match = findStudentDataMatch(classNameKey);
+    if (!match) return;
+
+    const students = match.data.students;
     const absentStudents = students.filter(s => s.status === 'absent');
-    const absentCount = absentStudents.length;
-    const presentCount = total - absentCount;
-    let text = 'LỚP: ' + classKey + '\n';
-    text += 'Sĩ số: ' + total + ' (Có mặt: ' + presentCount + ' | Vắng: ' + absentCount + ')\n-------------------------\nDanh sách vắng:\n';
-    if (absentCount === 0) {
-        text += '- Lớp đi học đủ.';
+    
+    let report = `LỚP HỌC: ${titleText}\n`;
+    report += `Sĩ số: ${students.length} (Vắng: ${absentStudents.length})\n`;
+    report += `-------------------------\nDanh sách học sinh vắng:\n`;
+    
+    if (absentStudents.length === 0) {
+        report += `- Lớp đi học đầy đủ.`;
     } else {
-        absentStudents.forEach((s, idx) => {
-            const note = s.note ? ' (' + s.note + ')' : '';
-            text += (idx + 1) + '. ' + s.name + note + '\n';
+        absentStudents.forEach((s, i) => {
+            report += `${i + 1}. ${s.name}${s.note ? ' (' + s.note + ')' : ''}\n`;
         });
     }
 
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Đã copy báo cáo lớp ' + classKey + '!');
-    }).catch(() => alert('Lỗi không thể tự động copy.'));
+    navigator.clipboard.writeText(report).then(() => {
+        alert('Đã sao chép nội dung báo cáo lớp ' + classNameKey);
+    });
 }
 
 async function saveDatabaseState() {
-    localStorage.setItem('big_classes_database', JSON.stringify(bigClassesDatabase));
+    localStorage.setItem('master_students_db', JSON.stringify(masterStudentsDatabase));
+    localStorage.setItem('day_schedules_struct', JSON.stringify(daySchedulesStructure));
     await window.saveToFirebase();
 }
 
 function callPhoneAction(phone) {
-    if (!phone || phone === 'Chưa có') { alert('Chưa cập nhật SĐT học viên!'); return; }
+    if (!phone || phone === 'Chưa có') { alert('Chưa cập nhật SĐT!'); return; }
     window.location.href = 'tel:' + phone;
 }
 
@@ -635,32 +622,17 @@ function searchGlobalStudent() {
     
     resultBody.innerHTML = "";
     resultBox.style.display = 'none';
-    document.querySelectorAll('.student-card').forEach(card => card.classList.remove('highlight-search'));
-
     if (keyword === "") return;
-    let keywordNoSpace = keyword.replace(/\s+/g, "");
 
     let matchCount = 0;
-    let firstScrolledTargetId = null;
-    let matchedClasses = new Set(); 
+    let matchedKeys = new Set(); 
 
-    Object.keys(bigClassesDatabase).forEach(classKey => {
-        const students = bigClassesDatabase[classKey].students;
-        
-        students.forEach(student => {
-            const nameLower = student.name.toLowerCase();
-            const phoneTho = student.phone.toString();
-            
-            if (nameLower.includes(keyword) || nameLower.replace(/\s+/g, "").includes(keywordNoSpace) || phoneTho.includes(keyword)) {
+    Object.keys(masterStudentsDatabase).forEach(classKey => {
+        masterStudentsDatabase[classKey].students.forEach(student => {
+            if (student.name.toLowerCase().includes(keyword) || student.phone.toString().includes(keyword)) {
                 matchCount++;
-                matchedClasses.add(classKey); 
+                matchedKeys.add(classKey); 
                 
-                const cardDomId = `card-${classKey.replace(/\s+/g, '-')}-${student.id}`;
-                if (!firstScrolledTargetId) firstScrolledTargetId = cardDomId;
-                
-                const targetCardDom = document.getElementById(cardDomId);
-                if (targetCardDom) targetCardDom.classList.add('highlight-search');
-
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight: bold; color: #fff;">${student.name}</td>
@@ -677,46 +649,27 @@ function searchGlobalStudent() {
         resultCount.innerText = `Tìm thấy ${matchCount} kết quả`;
         resultBox.style.display = 'block';
         
-        // TỰ ĐỘNG MỞ CẢ KHỐI LỚN LẪN LỚP CON KHI TÌM KIẾM THẤY HỌC VIÊN
-        matchedClasses.forEach(classKey => {
-            const classObj = bigClassesDatabase[classKey];
-            const groupInfo = getGroupKeyBySheet(classObj.sheet);
-            
-            // Mở khối lớn chứa lớp này
-            const groupWrapper = document.getElementById(`group-wrapper-${groupInfo.key}`);
-            if (groupWrapper) groupWrapper.classList.add('active');
-
-            // Mở accordion của chính lớp con đó
-            const classWrapper = document.querySelector(`[data-classname-box="${classKey}"]`);
-            if (classWrapper) {
-                classWrapper.classList.add('active');
-            }
+        matchedKeys.forEach(classKey => {
+            document.querySelectorAll(`[data-classname-box="${classKey}"]`).forEach(cw => {
+                cw.classList.add('active');
+                cw.parentElement.parentElement.classList.add('active'); 
+            });
         });
-
-        if (firstScrolledTargetId) {
-            setTimeout(() => {
-                const element = document.getElementById(firstScrolledTargetId);
-                if(element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }, 150); // Trì hoãn nhẹ hơn một chút để cả Khối lẫn lớp kịp giãn DOM ra
-        }
     } else {
-        alert("Không tìm thấy học viên nào khớp với từ khóa tìm kiếm.");
+        alert("Không tìm thấy kết quả phù hợp.");
     }
 }
 
 function handleSearchKeyPress(event) {
-    if (event.key === 'Enter') { searchGlobalStudent(); }
+    if (event.key === 'Enter') searchGlobalStudent();
 }
 
 function clearSystemCache() {
-    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ danh sách lớp học hiện tại khỏi bộ nhớ trình duyệt?")) {
-        localStorage.removeItem('big_classes_database');
-        localStorage.removeItem('big_classes_filename');
-        bigClassesDatabase = {};
-        renderFullSystemUI();
-        document.getElementById('fileStatusMessage').style.color = "#ffd700";
+    if (confirm("Xóa toàn bộ dữ liệu lưu trữ?")) {
+        localStorage.clear();
+        masterStudentsDatabase = {};
+        Object.keys(daySchedulesStructure).forEach(k => daySchedulesStructure[k].classes = []);
+        renderSystemUIByDay();
         document.getElementById('fileStatusMessage').innerText = "Chưa có dữ liệu học viên. Vui lòng chọn tệp Excel.";
     }
 }
@@ -732,8 +685,7 @@ const firebaseConfig = {
   projectId: "tienganhhavi-12b54",
   storageBucket: "tienganhhavi-12b54.firebasestorage.app",
   messagingSenderId: "208059039650",
-  appId: "1:208059039650:web:d272318418e01d0f50fcfb",
-  measurementId: "G-XPHJWRWSLZ"
+  appId: "1:208059039650:web:d272318418e01d0f50fcfb"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -741,45 +693,33 @@ const db = getFirestore(app);
 
 window.saveToFirebase = async function () {
     try {
-        await setDoc(
-            doc(db, "system", "database"),
-            {
-                database: bigClassesDatabase,
-                filename: localStorage.getItem("big_classes_filename") || "",
-                updatedAt: new Date().toISOString()
-            }
-        );
-        console.log("Đã lưu Firebase");
-    } catch (err) {
-        console.error("Lỗi lưu Firebase:", err);
-    }
+        await setDoc(doc(db, "system", "database_v3_by_column"), {
+            database: masterStudentsDatabase,
+            structure: daySchedulesStructure,
+            filename: localStorage.getItem("big_classes_filename") || "",
+            updatedAt: new Date().toISOString()
+        });
+    } catch (err) { console.error("Lỗi đồng bộ Firebase: ", err); }
 }
 
 window.loadFromFirebase = async function () {
     try {
-        const docRef = doc(db, "system", "database");
-        const docSnap = await getDoc(docRef);
-
+        const docSnap = await getDoc(doc(db, "system", "database_v3_by_column"));
         if (docSnap.exists()) {
             const data = docSnap.data();
-            bigClassesDatabase = data.database || {};
-			localStorage.setItem("big_classes_database", JSON.stringify(bigClassesDatabase));
-            if (data.filename) {
-                localStorage.setItem("big_classes_filename", data.filename);
-            }
-            renderFullSystemUI();
-            console.log("Đã tải dữ liệu từ Firebase");
-        } else {
-            console.log("Chưa có dữ liệu trên Firebase");
+            masterStudentsDatabase = data.database || {};
+            daySchedulesStructure = data.structure || daySchedulesStructure;
+            
+            localStorage.setItem("master_students_db", JSON.stringify(masterStudentsDatabase));
+            localStorage.setItem("day_schedules_struct", JSON.stringify(daySchedulesStructure));
+            
+            renderSystemUIByDay();
         }
-    } catch (err) {
-        console.error("Lỗi đọc Firebase:", err);
+    } catch (err) { 
+        console.error("Lỗi đọc dữ liệu từ Firebase:", err); 
     }
 }
 
-window.testFirebase = async function () { await window.saveToFirebase(); }
-window.db = db;
-console.log("Đã kết nối Firebase");
 window.loadFromFirebase();
 </script>
 </body>
