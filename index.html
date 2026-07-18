@@ -66,8 +66,14 @@
         .class-accordion-header::after { content: '▼'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ffd700; font-size: 0.75rem; }
         .class-block-wrapper.active .class-accordion-header::after { content: '▲'; color: #00ff66; }
         
-        .class-main-title { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: 1.05rem; text-transform: uppercase; font-weight: bold; margin-bottom: 2px; }
-        .class-schedule { color: #fff; font-size: 0.8rem; opacity: 0.8; margin-bottom: 3px; line-height: 1.3; }
+        /* Tiêu đề lớp màu vàng đứng cùng dòng với giáo viên/lịch học */
+        .class-header-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 4px; padding-right: 20px; }
+        .class-main-title { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: 1.05rem; text-transform: uppercase; font-weight: bold; }
+        
+        /* Màu xanh da trời cho giáo viên và giờ học */
+        .class-extra-inline { color: #00f0ff; text-shadow: 0 0 8px rgba(0, 240, 255, 0.3); font-size: 0.9rem; font-weight: 500; }
+        
+        .class-schedule { color: #fff; font-size: 0.85rem; opacity: 0.95; margin-bottom: 3px; line-height: 1.4; }
         .class-stats { text-align: left; color: #00ff66; font-size: 0.75rem; font-weight: 500; }
         
         .class-panel { padding: 12px 6px; display: none; background: #0a0a14; }
@@ -232,13 +238,19 @@ function startProcessingExcel(input) {
                     if (!cell || !cell.v) continue;
                     
                     let cellVal = cell.v.toString().trim().toUpperCase();
-                    if (cellVal.includes("THỨ 2") || cellVal === "T2") { colToDayMap[c] = "THU_2"; foundDaysRow = true; }
-                    else if (cellVal.includes("THỨ 3") || cellVal === "T3") { colToDayMap[c] = "THU_3"; foundDaysRow = true; }
-                    else if (cellVal.includes("THỨ 4") || cellVal === "T4") { colToDayMap[c] = "THU_4"; foundDaysRow = true; }
-                    else if (cellVal.includes("THỨ 5") || cellVal === "T5") { colToDayMap[c] = "THU_5"; foundDaysRow = true; }
-                    else if (cellVal.includes("THỨ 6") || cellVal === "T6") { colToDayMap[c] = "THU_6"; foundDaysRow = true; }
-                    else if (cellVal.includes("THỨ 7") || cellVal === "T7") { colToDayMap[c] = "THU_7"; foundDaysRow = true; }
-                    else if (cellVal.includes("CN") || cellVal.includes("CHỦ NHẬT")) { colToDayMap[c] = "CHU_NHAT"; foundDaysRow = true; }
+                    let currentKey = "";
+                    if (cellVal.includes("THỨ 2") || cellVal === "T2") currentKey = "THU_2";
+                    else if (cellVal.includes("THỨ 3") || cellVal === "T3") currentKey = "THU_3";
+                    else if (cellVal.includes("THỨ 4") || cellVal === "T4") currentKey = "THU_4";
+                    else if (cellVal.includes("THỨ 5") || cellVal === "T5") currentKey = "THU_5";
+                    else if (cellVal.includes("THỨ 6") || cellVal === "T6") currentKey = "THU_6";
+                    else if (cellVal.includes("THỨ 7") || cellVal === "T7") currentKey = "THU_7";
+                    else if (cellVal.includes("CN") || cellVal.includes("CHỦ NHẬT")) currentKey = "CHU_NHAT";
+
+                    if (currentKey) {
+                        colToDayMap[c] = currentKey; 
+                        foundDaysRow = true;
+                    }
                 }
                 if (foundDaysRow) break;
             }
@@ -249,6 +261,9 @@ function startProcessingExcel(input) {
                 let roomLocation = (roomCell && roomCell.v) ? roomCell.v.toString().trim() : "";
 
                 for (let c = range.s.c; c <= range.e.c; c++) {
+                    let dayKey = colToDayMap[c];
+                    if (!dayKey) continue;
+
                     let cellRef = XLSX.utils.encode_cell({ r: r, c: c });
                     let cell = sheetL[cellRef];
                     if (!cell || !cell.v) continue;
@@ -257,19 +272,22 @@ function startProcessingExcel(input) {
                     let textLower = text.toLowerCase();
                     
                     if (textLower.includes("sun") || textLower.includes("kid") || textLower.includes("like") || textLower.includes("kind") || textLower.includes("svip") || text.startsWith("E") || textLower.includes("ielts") || textLower.includes("high")) {
-                        let dayKey = colToDayMap[c];
-                        if (dayKey) {
-                            let cleanClassName = text.split("\n")[0].trim();
-                            let fullScheduleText = text + (roomLocation ? "\n📍 Vị trí: " + roomLocation : "");
+                        let cleanClassName = text.split("\n")[0].trim();
+                        
+                        let extraRef = XLSX.utils.encode_cell({ r: r, c: c + 1 });
+                        let extraCell = sheetL[extraRef];
+                        let extraInfo = (extraCell && extraCell.v) ? extraCell.v.toString().trim() : "";
 
-                            let isExist = window.daySchedulesStructure[dayKey].classes.some(cls => cls.rawText === fullScheduleText);
-                            if (!isExist && cleanClassName.length > 1) {
-                                window.daySchedulesStructure[dayKey].classes.push({
-                                    classNameKey: cleanClassName,
-                                    rawText: fullScheduleText,
-                                    rowIndex: r // Ghi nhớ số dòng xuất hiện trong cột B từ trên xuống dưới
-                                });
-                            }
+                        let classPayload = {
+                            classNameKey: cleanClassName,
+                            room: roomLocation,
+                            scheduleAndTeacher: extraInfo,
+                            rowIndex: r
+                        };
+
+                        let isExist = window.daySchedulesStructure[dayKey].classes.some(cls => cls.classNameKey === cleanClassName && cls.rowIndex === r);
+                        if (!isExist && cleanClassName.length > 1) {
+                            window.daySchedulesStructure[dayKey].classes.push(classPayload);
                         }
                     }
                 }
@@ -350,8 +368,7 @@ function startProcessingExcel(input) {
                             }
                             if (cellB && cleanPhone.length < 9) {
                                 readingStudents = false;
-                                previousText = cellB;
-                                return;
+                                { previousText = cellB; return; }
                             }
                             return;
                         }
@@ -405,7 +422,7 @@ window.renderSystemUIByDay = function() {
         const dayGroup = window.daySchedulesStructure[dayKey];
         if (!dayGroup || dayGroup.classes.length === 0) return; 
 
-        // 📊 SẮP XẾP: Sắp xếp các lớp theo vị trí phòng học từ trên xuống dưới (rowIndex tăng dần)
+        // Sắp xếp lớp học theo vị trí phòng học từ trên xuống dưới
         dayGroup.classes.sort((a, b) => {
             let rA = a.rowIndex !== undefined ? a.rowIndex : 9999;
             let rB = b.rowIndex !== undefined ? b.rowIndex : 9999;
@@ -431,13 +448,14 @@ window.renderSystemUIByDay = function() {
         dayGroup.classes.forEach((clsObj, idx) => {
             const studentMatch = findStudentDataMatch(clsObj.classNameKey);
             let studentList = [];
-            let originalScheduleText = clsObj.rawText; 
 
-            let textLines = originalScheduleText.split("\n");
-            if (textLines.length > 0 && textLines[0].trim().toUpperCase() === clsObj.classNameKey.toUpperCase()) {
-                textLines.shift();
-            }
-            let cleanedScheduleText = textLines.join("\n");
+            // Thiết lập vị trí phòng học ở dòng riêng bên dưới
+            let roomText = clsObj.room ? "📍 Vị trí: " + clsObj.room : "📍 Vị trí: Chưa rõ";
+
+            // Tạo chuỗi hoàn chỉnh dùng cho tính năng copy báo cáo vắng mặt
+            let fullReportTitle = clsObj.classNameKey;
+            if (clsObj.scheduleAndTeacher) fullReportTitle += " - " + clsObj.scheduleAndTeacher;
+            fullReportTitle += "\n" + roomText;
 
             if (studentMatch) {
                 studentList = studentMatch.data.students;
@@ -453,10 +471,14 @@ window.renderSystemUIByDay = function() {
             classSection.setAttribute("id", `class-wrapper-${safeId}`);
             classSection.setAttribute("data-classname-box", clsObj.classNameKey);
 
+            // GIAO DIỆN MỚI: Tên lớp vàng đứng cùng dòng với extra thông tin giáo viên tô màu xanh da trời
             classSection.innerHTML = `
                 <div class="class-accordion-header" onclick="toggleAccordion(this)">
-                    <div class="class-main-title">${clsObj.classNameKey}</div>
-                    <div class="class-schedule" style="white-space: pre-line;">${cleanedScheduleText}</div>
+                    <div class="class-header-row">
+                        <span class="class-main-title">${clsObj.classNameKey}</span>
+                        ${clsObj.scheduleAndTeacher ? `<span class="class-extra-inline">- ${clsObj.scheduleAndTeacher}</span>` : ''}
+                    </div>
+                    <div class="class-schedule" style="white-space: pre-line;">${roomText}</div>
                     <div class="class-stats" id="stats-display-${safeId}">Sĩ số: ${total} | Có mặt: ${present} | Vắng: ${absent}</div>
                 </div>
                 
@@ -464,7 +486,7 @@ window.renderSystemUIByDay = function() {
                     <h3>Danh Sách Thành Viên Lớp</h3>
                     <br>
                     
-                    <div class="add-student-box" style=" display : none">
+                    <div class="add-student-box" style="display: none">
                         <input type="text" id="inputName-${safeId}" placeholder="Họ và tên học viên..." hidden>
                         <input type="tel" id="inputPhone-${safeId}" placeholder="Số điện thoại..." hidden>
                         <button class="btn-add" onclick="addNewStudentToUI('${clsObj.classNameKey}', '${safeId}')" hidden>+ Thêm học sinh</button>
@@ -473,7 +495,7 @@ window.renderSystemUIByDay = function() {
                     <div class="absent-section">
                         <div class="absent-header">
                             <span class="absent-title">HỌC VIÊN VẮNG MẶT HÔM NAY</span>
-                            <button class="copy-btn" onclick="copyAbsentReport('${clsObj.classNameKey}', '${originalScheduleText}')">Copy nhanh</button>
+                            <button class="copy-btn" onclick="copyAbsentReport('${clsObj.classNameKey}', '${fullReportTitle.replace(/'/g, "\\'")}')">Copy nhanh</button>
                         </div>
                         <ul class="absent-list" id="absentList-${safeId}">
                             ${renderAbsentRowsHtml(studentList)}
