@@ -178,18 +178,7 @@ function displayPhone(p) {
     return p; 
 }
 
-window.onload = async function () {
-    try {
-        if (typeof window.loadFromFirebase === "function") {
-            await window.loadFromFirebase();
-        } else {
-            loadLocalCacheBackup();
-        }
-    } catch (e) {
-        loadLocalCacheBackup();
-    }
-}
-
+// Hàm dự phòng khi mất kết nối mạng
 function loadLocalCacheBackup() {
     const cachedDb = localStorage.getItem("master_students_db");
     const cachedStruct = localStorage.getItem("day_schedules_struct");
@@ -208,7 +197,7 @@ function startProcessingExcel(input) {
     document.getElementById('progressContainer').style.display = 'block';
     document.getElementById('progressBar').style.width = '10%';
 
-    // ⚡ BƯỚC 1: TRÍCH XUẤT SAO LƯU TRẠNG THÁI ĐIỂM DANH CŨ (Tên + SĐT để map)
+    // SAO LƯU TRẠNG THÁI HỌC SINH CŨ (Tên + SĐT để map)
     const oldStudentsMemoryMap = {};
     Object.keys(window.masterStudentsDatabase).forEach(classKey => {
         if (window.masterStudentsDatabase[classKey] && window.masterStudentsDatabase[classKey].students) {
@@ -368,7 +357,6 @@ function startProcessingExcel(input) {
                                     };
                                 }
 
-                                // ⚡ BƯỚC 2: SO SÁNH & KHÔI PHỤC TRẠNG THÁI KHI TRÙNG KHỚP TÊN + SĐT
                                 let uniqueMatchKey = `${cellB.trim().toLowerCase()}_${cleanPhone.trim()}`;
                                 let defaultStatus = "present";
                                 let defaultNote = "";
@@ -382,8 +370,8 @@ function startProcessingExcel(input) {
                                     id: window.masterStudentsDatabase[classKeyUpper].students.length + 1,
                                     name: cellB,
                                     phone: cleanPhone,
-                                    status: defaultStatus,  // Khôi phục trạng thái cũ
-                                    note: defaultNote       // Khôi phục ghi chú cũ
+                                    status: defaultStatus,  
+                                    note: defaultNote       
                                 });
                                 return;
                             }
@@ -431,6 +419,13 @@ function findStudentDataMatch(classNameKey) {
 
 window.renderSystemUIByDay = function() {
     const mainContainer = document.getElementById("dynamicMainContainer");
+    
+    // Giữ trạng thái đóng mở của các thẻ accordion hiện tại để tránh bị giật màn hình khi đồng bộ thời gian thực
+    const openedDomIds = [];
+    document.querySelectorAll('.class-block-wrapper.active, .group-block-wrapper.active').forEach(el => {
+        if (el.id) openedDomIds.push(el.id);
+    });
+
     mainContainer.innerHTML = "";
 
     let hasData = hardcodedDayKeysOrder.some(k => window.daySchedulesStructure[k] && window.daySchedulesStructure[k].classes.length > 0);
@@ -471,9 +466,10 @@ window.renderSystemUIByDay = function() {
 
             let roomText = clsObj.room ? "📍 Vị trí: " + clsObj.room : "📍 Vị trí: Chưa rõ";
 
+            // Mã hóa an toàn tiêu đề báo cáo để truyền vào hàm copy hành vi onclick mà không gây vỡ dòng lệnh
             let fullReportTitle = clsObj.classNameKey;
             if (clsObj.scheduleAndTeacher) fullReportTitle += " - " + clsObj.scheduleAndTeacher;
-            fullReportTitle += "\n" + roomText;
+            fullReportTitle += " (" + roomText + ")";
 
             if (studentMatch) {
                 studentList = studentMatch.data.students;
@@ -512,7 +508,7 @@ window.renderSystemUIByDay = function() {
                     <div class="absent-section">
                         <div class="absent-header">
                             <span class="absent-title">HỌC VIÊN VẮNG MẶT HÔM NAY</span>
-                            <button class="copy-btn" onclick="copyAbsentReport('${clsObj.classNameKey}', '${fullReportTitle.replace(/'/g, "\\'")}')">Copy nhanh</button>
+                            <button class="copy-btn" id="btnCopy-${safeId}">Copy nhanh</button>
                         </div>
                         <ul class="absent-list" id="absentList-${safeId}">
                             ${renderAbsentRowsHtml(studentList)}
@@ -524,9 +520,22 @@ window.renderSystemUIByDay = function() {
                     </div>
                 </div>
             `;
+            
+            // Xử lý sự kiện click của nút copy trực tiếp qua DOM để không bị dính lỗi cú pháp ký tự xuống dòng
+            classSection.querySelector(`#btnCopy-${safeId}`).onclick = function(e) {
+                e.stopPropagation();
+                copyAbsentReport(clsObj.classNameKey, fullReportTitle);
+            };
+
             classSection.querySelector('.class-panel').onclick = (e) => e.stopPropagation();
             groupPanel.appendChild(classSection);
         });
+    });
+
+    // Khôi phục lại trạng thái đóng/mở thẻ trước đó
+    openedDomIds.forEach(id => {
+        let target = document.getElementById(id);
+        if (target) target.classList.add('active');
     });
 }
 
@@ -584,7 +593,6 @@ function updateStudentStatus(classNameKey, studentId, status) {
         if (student) {
             student.status = status;
             saveDatabaseState();
-            renderFullSystemUIUpdate();
         }
     }
 }
@@ -596,7 +604,6 @@ function updateStudentNote(classNameKey, studentId, value) {
         if (student) {
             student.note = value;
             saveDatabaseState();
-            renderFullSystemUIUpdate();
         }
     }
 }
@@ -620,7 +627,6 @@ function addNewStudentToUI(classNameKey, safeId) {
     studentsList.push({ id: nextId, name: name, phone: phone, status: 'present', note: '' });
     
     saveDatabaseState();
-    renderFullSystemUIUpdate();
 }
 
 function deleteStudent(classNameKey, studentId, safeId) {
@@ -629,22 +635,7 @@ function deleteStudent(classNameKey, studentId, safeId) {
         match.data.students = match.data.students.filter(s => s.id !== studentId);
         match.data.students.forEach((s, idx) => s.id = idx + 1);
         saveDatabaseState();
-        renderFullSystemUIUpdate();
     }
-}
-
-function renderFullSystemUIUpdate() {
-    const openedDomIds = [];
-    document.querySelectorAll('.class-block-wrapper.active, .group-block-wrapper.active').forEach(el => {
-        if (el.id) openedDomIds.push(el.id);
-    });
-
-    window.renderSystemUIByDay();
-
-    openedDomIds.forEach(id => {
-        let target = document.getElementById(id);
-        if (target) target.classList.add('active');
-    });
 }
 
 function copyAbsentReport(classNameKey, titleText) {
@@ -662,19 +653,44 @@ function copyAbsentReport(classNameKey, titleText) {
         report += `- Lớp đi học đầy đủ.`;
     } else {
         absentStudents.forEach((s, i) => {
-            report += `${i + 1}. ${s.name}${s.note ? ' (' + s.note + ')' : ''}\n`;
+            report += `${i + 1}. ${s.name}${s.note ? ' (' + s.note + ')' : ' (Chưa rõ lý do)'}\n`;
         });
     }
 
-    navigator.clipboard.writeText(report).then(() => {
-        alert('Đã sao chép nội dung báo cáo lớp ' + classNameKey);
-    });
+    // Cơ chế copy an toàn tương thích mọi thiết bị di động
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(report).then(() => {
+            alert('✅ Đã sao chép báo cáo vắng lớp ' + classNameKey);
+        }).catch(err => {
+            fallbackCopyText(report, classNameKey);
+        });
+    } else {
+        fallbackCopyText(report, classNameKey);
+    }
+}
+
+function fallbackCopyText(text, classNameKey) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        alert('✅ Đã sao chép báo cáo vắng lớp ' + classNameKey);
+    } catch (err) {
+        alert('Không thể sao chép dữ liệu, vui lòng cấp quyền cho trình duyệt.');
+    }
+    document.body.removeChild(textArea);
 }
 
 async function saveDatabaseState() {
     localStorage.setItem('master_students_db', JSON.stringify(window.masterStudentsDatabase));
     localStorage.setItem('day_schedules_struct', JSON.stringify(window.daySchedulesStructure));
-    await window.saveToFirebase();
+    if (typeof window.saveToFirebase === "function") {
+        await window.saveToFirebase();
+    }
 }
 
 function callPhoneAction(phone) {
@@ -733,19 +749,23 @@ function handleSearchKeyPress(event) {
 }
 
 function clearSystemCache() {
-    if (confirm("Xóa toàn bộ dữ liệu lưu trữ?")) {
+    if (confirm("Xóa toàn bộ dữ liệu lưu trữ trên hệ thống đám mây đám mây?")) {
         localStorage.clear();
         window.masterStudentsDatabase = {};
         Object.keys(window.daySchedulesStructure).forEach(k => window.daySchedulesStructure[k].classes = []);
         window.renderSystemUIByDay();
+        if (typeof window.saveToFirebase === "function") {
+            window.saveToFirebase();
+        }
         document.getElementById('fileStatusMessage').innerText = "Chưa có dữ liệu học viên. Vui lòng chọn tệp Excel.";
     }
 }
 </script>
 
+<!-- MODULE PHỤ TRÁCH LIÊN KẾT DỮ LIỆU THỜI GIAN THỰC (REALTIME SYNC) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDbCF0pFsdXqD14Y-wjWLFoNCGfP1LBlD8",
@@ -759,6 +779,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Đẩy dữ liệu lên Firebase
 window.saveToFirebase = async function () {
     try {
         await setDoc(doc(db, "system", "database_v3_by_column"), {
@@ -767,30 +788,34 @@ window.saveToFirebase = async function () {
             filename: localStorage.getItem("big_classes_filename") || "",
             updatedAt: new Date().toISOString()
         });
-    } catch (err) { console.error("Lỗi đồng bộ Firebase: ", err); }
+    } catch (err) { console.error("Lỗi đồng bộ dữ liệu lên Firebase: ", err); }
 }
 
-window.loadFromFirebase = async function () {
-    try {
-        const docSnap = await getDoc(doc(db, "system", "database_v3_by_column"));
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            window.masterStudentsDatabase = data.database || {};
-            window.daySchedulesStructure = data.structure || window.daySchedulesStructure;
-            
-            localStorage.setItem("master_students_db", JSON.stringify(window.masterStudentsDatabase));
-            localStorage.setItem("day_schedules_struct", JSON.stringify(window.daySchedulesStructure));
-            
-            if (typeof window.renderSystemUIByDay === "function") {
-                window.renderSystemUIByDay();
-            }
+// ⚡ LẮNG NGHE THỜI GIAN THỰC (REALTIME LISTENER): Tự động phát hiện biến động dữ liệu trên máy khác sau 0.5s
+onSnapshot(doc(db, "system", "database_v3_by_column"), (docSnap) => {
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        window.masterStudentsDatabase = data.database || {};
+        window.daySchedulesStructure = data.structure || window.daySchedulesStructure;
+        
+        localStorage.setItem("master_students_db", JSON.stringify(window.masterStudentsDatabase));
+        localStorage.setItem("day_schedules_struct", JSON.stringify(window.daySchedulesStructure));
+        
+        // Cập nhật lại giao diện ngay tức thì
+        window.renderSystemUIByDay();
+        
+        let countTotal = 0;
+        Object.keys(window.masterStudentsDatabase).forEach(k => countTotal += window.masterStudentsDatabase[k].students.length);
+        if(countTotal > 0) {
+            document.getElementById('fileStatusMessage').innerText = `🔥 Hệ thống đang liên kết thiết bị trực tuyến.\nTổng số: ${countTotal} học sinh toàn hệ thống.`;
         }
-    } catch (err) { 
-        console.error("Lỗi đọc dữ liệu từ Firebase:", err); 
+    } else {
+        loadLocalCacheBackup();
     }
-}
-
-window.loadFromFirebase();
+}, (err) => {
+    console.error("Lỗi lắng nghe Firebase Realtime:", err);
+    loadLocalCacheBackup();
+});
 </script>
 </body>
 </html>
