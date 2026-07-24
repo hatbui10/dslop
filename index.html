@@ -94,7 +94,7 @@
         .absent-list li { padding: 3px 0; border-bottom: 1px solid rgba(255, 0, 127, 0.1); }
         
         .student-list { display: flex; flex-direction: column; gap: 10px; }
-        .student-card { background: #121224; border: 1px solid #333; border-left: 4px solid #00f0ff; border-radius: 4px; padding: 12px 10px; display: flex; flex-direction: column; gap: 10px; transition: background 0.2s; }
+        .student-card { background: #0B1849; border: 1px solid #333; border-left: 4px solid #00f0ff; border-radius: 4px; padding: 12px 10px; display: flex; flex-direction: column; gap: 10px; transition: background 0.2s; }
         .student-card.status-absent { border-left-color: #ff007f; background: #1a0813; }
         .student-card.status-present { border-left-color: #00ff66; background: #0B1849; }
         .student-card.highlight-search { border: 1px solid #ffd700 !important; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
@@ -133,10 +133,17 @@
         }
 
         /* 2. Nếu ở chế độ Giáo Viên: Ẩn nút gọi điện */
+        body.role-teacher .custom-upload-btn,
+        body.role-teacher .btn-delete,
         body.role-teacher .btn-call,
         body.role-teacher .th-call-col,
         body.role-teacher .td-call-col {
             display: none !important;
+        }
+
+        /* Ẩn khung upload khi ở chế độ Giáo Viên */
+         body.role-teacher .upload-card {
+         display: none !important;
         }
 
         /* 3. Nếu ở chế độ Trợ Giảng: Ẩn nút gọi, TRỪ KHI học sinh đó vắng (status-absent) */
