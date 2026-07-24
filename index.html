@@ -14,6 +14,11 @@
         h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); font-size: 1.4rem; }
         h3 { color: #ff007f; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); font-size: 1.1rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         
+        /* 🛡️ THANH CHỌN QUYỀN (GIÁO VIÊN / TRỢ GIẢNG) */
+        .role-selector-bar { background: #0d0d1a; border: 1px solid #00f0ff; border-radius: 6px; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 0 10px rgba(0, 240, 255, 0.1); }
+        .role-selector-bar label { font-size: 0.9rem; font-weight: bold; color: #00f0ff; text-transform: uppercase; }
+        .role-select { background: #050508; color: #ffd700; border: 1px solid #ffd700; padding: 6px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 4px; outline: none; cursor: pointer; }
+
         /* 📂 KHU VỰC TẢI FILE */
         .upload-card { background: #0a0a14; border: 1px solid #ffd700; border-radius: 6px; padding: 15px 10px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
         .upload-card p { font-size: 0.85rem; color: #aaa; text-align: center; margin-bottom: 12px; }
@@ -52,7 +57,7 @@
         .result-table th { background-color: #4a0025; color: #fff; text-transform: uppercase; font-size: 0.75rem; }
         .result-table tr:nth-child(even) { background-color: rgba(255, 0, 127, 0.03); }
 
-        /* 📦 KHỐI NHÓM LỚP (GIAO DIỆN MỚI) */
+        /* 📦 KHỐI NHÓM LỚP */
         .group-block-wrapper { margin-bottom: 20px; background: #04040a; border: 1px solid #ffd700; border-radius: 8px; overflow: hidden; box-shadow: 0 0 12px rgba(255, 215, 0, 0.05); }
         .group-accordion-header { padding: 14px 12px; background: #111122; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; border-bottom: 2px solid #ffd700; display: flex; justify-content: space-between; align-items: center; }
         .group-accordion-header:active { background: #1c1c38; }
@@ -70,7 +75,6 @@
         .class-accordion-header::after { content: '▼'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #00f0ff; font-size: 0.8rem; transition: transform 0.3s; }
         .class-block-wrapper.active .class-accordion-header::after { content: '▲'; color: #00ff66; }
         
-        .class-sheet-badge { display: inline-block; background: #4a0025; color: #ff007f; border: 1px solid #ff007f; font-size: 0.7rem; font-weight: bold; padding: 1px 6px; border-radius: 3px; margin-bottom: 4px; text-transform: uppercase; }
         .class-main-title { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.3); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
         .class-stats { text-align: left; color: #00ff66; font-size: 0.85rem; margin-top: 3px; font-weight: 500; }
         
@@ -113,11 +117,27 @@
         .note-select { flex: 1.5; background: #1a1a3a; color: #00f0ff; border: 1px solid #00f0ff; padding: 9px 3px; font-size: 0.8rem; border-radius: 3px; outline: none; }
         
         .empty-alert { text-align: center; padding: 40px 10px; color: #555; font-style: italic; font-size: 0.95rem; }
+
+        /* ẨN NÚT GỌI NẾU Ở GIAO DIỆN GIÁO VIÊN */
+        body.role-teacher .btn-call,
+        body.role-teacher .th-call-col,
+        body.role-teacher .td-call-col {
+            display: none !important;
+        }
     </style>
 </head>
-<body>
+<body class="role-teacher">
 
 <h2>HỆ THỐNG QUẢN LÝ ĐIỂM DANH ĐỘNG</h2>
+
+<!-- THANH CHỌN GIAO DIỆN PHÂN QUYỀN -->
+<div class="role-selector-bar">
+    <label for="roleSelect">Chế độ hiển thị:</label>
+    <select id="roleSelect" class="role-select" onchange="handleRoleChange(this)">
+        <option value="teacher" selected>Giáo Viên (Ẩn nút gọi)</option>
+        <option value="assistant">Trợ Giảng (Yêu cầu mật khẩu)</option>
+    </select>
+</div>
 
 <div class="upload-card">
     <div class="btn-group-top">
@@ -148,7 +168,7 @@
                 <th>Họ và Tên</th>
                 <th>SĐT</th>
                 <th>Lớp Học</th>
-                <th>Gọi</th>
+                <th class="th-call-col">Gọi</th>
             </tr>
         </thead>
         <tbody id="resultTableBody"></tbody>
@@ -162,6 +182,43 @@
 <script>
 const targetSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "DH25", "DH26"];
 let bigClassesDatabase = {};
+
+// MẬT KHẨU TRỢ GIẢNG (Bạn có thể đổi chuỗi '123456' thành mật khẩu bạn muốn)
+const ASSISTANT_PASSWORD = "123456"; 
+
+// HÀM XỬ LÝ KHI CHUYỂN CHẾ ĐỘ
+function handleRoleChange(selectElement) {
+    const selectedValue = selectElement.value;
+    const bodyTag = document.body;
+
+    if (selectedValue === 'assistant') {
+        let passwordInput = prompt("Nhập mật khẩu để chuyển sang chế độ Trợ Giảng:");
+        if (passwordInput === ASSISTANT_PASSWORD) {
+            bodyTag.classList.remove('role-teacher');
+            bodyTag.classList.add('role-assistant');
+            localStorage.setItem('user_system_role', 'assistant');
+            alert("Đã chuyển sang chế độ Trợ Giảng thành công!");
+        } else {
+            alert("Sai mật khẩu! Giữ nguyên chế độ Giáo Viên.");
+            selectElement.value = 'teacher';
+            bodyTag.classList.remove('role-assistant');
+            bodyTag.classList.add('role-teacher');
+            localStorage.setItem('user_system_role', 'teacher');
+        }
+    } else {
+        bodyTag.classList.remove('role-assistant');
+        bodyTag.classList.add('role-teacher');
+        localStorage.setItem('user_system_role', 'teacher');
+    }
+}
+
+// Mặc định luôn khởi động ở chế độ Giáo Viên
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('roleSelect').value = 'teacher';
+    document.body.classList.remove('role-assistant');
+    document.body.classList.add('role-teacher');
+    localStorage.setItem('user_system_role', 'teacher');
+});
 
 function displayPhone(p) { 
     if(!p || p === 'Chưa có' || p === 'undefined') return 'Chưa có';
@@ -331,13 +388,11 @@ function toggleClassAccordion(headerElement) {
     wrapper.classList.toggle('active');
 }
 
-// HÀM CLICK ĐÓNG MỞ ACCORDION KHỐI LỚN
 function toggleGroupAccordion(headerElement) {
     const wrapper = headerElement.parentElement;
     wrapper.classList.toggle('active');
 }
 
-// THUẬT TOÁN ĐỊNH NGHĨA KHỐI CHO LỚP HỌC HỆ THỐNG
 function getGroupKeyBySheet(sheetName) {
     const s = sheetName.trim();
     if (["2", "3", "4", "5"].includes(s)) return { key: "TIEU_HOC", name: "Khối Tiểu Học (Lớp 2-5)" };
@@ -357,7 +412,6 @@ function renderFullSystemUI() {
         return;
     }
 
-    // Sắp xếp các lớp con
     classKeys.sort((a, b) => {
         const order = ["SV","2","3","4","5","6","7","8","9","10","11","12","DH25","DH26"];
         const sa = bigClassesDatabase[a].sheet;
@@ -368,7 +422,6 @@ function renderFullSystemUI() {
         return a.localeCompare(b, "vi");
     });
 
-    // Gom nhóm cấu trúc dữ liệu theo Khối
     const groupedData = {
         "TIEU_HOC": { name: "Khối Tiểu Học (Lớp 2-5)", classes: [], totalStudents: 0 },
         "THCS": { name: "Khối THCS (Lớp 6-9)", classes: [], totalStudents: 0 },
@@ -384,17 +437,15 @@ function renderFullSystemUI() {
         groupedData[groupInfo.key].totalStudents += classObj.students.length;
     });
 
-    // Vẽ giao diện phân bổ theo Khối
     const groupOrder = ["TIEU_HOC", "THCS", "THPT", "DAI_HOC", "KHAC"];
     groupOrder.forEach(gKey => {
         const group = groupedData[gKey];
-        if (group.classes.length === 0) return; // Khối nào không có lớp thì ẩn đi hoàn toàn
+        if (group.classes.length === 0) return;
 
         const groupSection = document.createElement("div");
         groupSection.className = "group-block-wrapper";
         groupSection.id = `group-wrapper-${gKey}`;
         
-        // Tạo header cho Khối lớn
         groupSection.innerHTML = `
             <div class="group-accordion-header" onclick="toggleGroupAccordion(this)">
                 <div class="group-main-title">${group.name}</div>
@@ -406,7 +457,6 @@ function renderFullSystemUI() {
 
         const groupPanel = groupSection.querySelector(".group-panel");
 
-        // Duyệt và vẽ từng lớp con thuộc Khối này
         group.classes.forEach(cls => {
             const classKey = cls.key;
             const classObj = cls.data;
@@ -474,8 +524,8 @@ function renderStudentCardsHtml(classKey, students) {
                 <div class="student-info-row">
                     <div class="student-meta">
                         <span class="student-name">${idx + 1}. ${student.name}</span>
-                     <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
-</div>
+                        <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
+                    </div>
                     <div class="student-actions-right">
                         <button class="btn-call" onclick="callPhoneAction('${student.phone}')">📞</button>
                         <button class="btn-delete" onclick="deleteStudentFromClass('${classKey}', ${student.id}, '${student.name.replace(/'/g, "\\'")}')">Xoá</button>
@@ -666,7 +716,7 @@ function searchGlobalStudent() {
                     <td style="font-weight: bold; color: #fff;">${student.name}</td>
                     <td style="color: #00ff66; font-family: monospace;">${displayPhone(student.phone)}</td>
                     <td style="color: #00f0ff; font-weight: bold; font-size:0.75rem;">${classKey}</td>
-                    <td style="text-align:center;"><button class="btn-call" style="padding:4px 8px; font-size:0.8rem;" onclick="callPhoneAction('${student.phone}')">📞</button></td>
+                    <td class="td-call-col" style="text-align:center;"><button class="btn-call" style="padding:4px 8px; font-size:0.8rem;" onclick="callPhoneAction('${student.phone}')">📞</button></td>
                 `;
                 resultBody.appendChild(tr);
             }
@@ -677,16 +727,13 @@ function searchGlobalStudent() {
         resultCount.innerText = `Tìm thấy ${matchCount} kết quả`;
         resultBox.style.display = 'block';
         
-        // TỰ ĐỘNG MỞ CẢ KHỐI LỚN LẪN LỚP CON KHI TÌM KIẾM THẤY HỌC VIÊN
         matchedClasses.forEach(classKey => {
             const classObj = bigClassesDatabase[classKey];
             const groupInfo = getGroupKeyBySheet(classObj.sheet);
             
-            // Mở khối lớn chứa lớp này
             const groupWrapper = document.getElementById(`group-wrapper-${groupInfo.key}`);
             if (groupWrapper) groupWrapper.classList.add('active');
 
-            // Mở accordion của chính lớp con đó
             const classWrapper = document.querySelector(`[data-classname-box="${classKey}"]`);
             if (classWrapper) {
                 classWrapper.classList.add('active');
@@ -699,7 +746,7 @@ function searchGlobalStudent() {
                 if(element) {
                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-            }, 150); // Trì hoãn nhẹ hơn một chút để cả Khối lẫn lớp kịp giãn DOM ra
+            }, 150);
         }
     } else {
         alert("Không tìm thấy học viên nào khớp với từ khóa tìm kiếm.");
