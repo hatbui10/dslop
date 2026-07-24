@@ -9,15 +9,56 @@
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #91008D; color: #e0e0e6; padding: 20px 8px; max-width: 600px; margin: 0 auto; }
+        body { background-color: #050508; color: #e0e0e6; padding: 20px 8px; max-width: 600px; margin: 0 auto; }
         
         h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); font-size: 1.4rem; }
         h3 { color: #ff007f; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); font-size: 1.1rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* 🛡️ THANH CHỌN QUYỀN */
-        .role-selector-bar { background: #0d0d1a; border: 1px solid #00f0ff; border-radius: 6px; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 0 10px rgba(0, 240, 255, 0.1); }
-        .role-selector-bar label { font-size: 0.9rem; font-weight: bold; color: #00f0ff; text-transform: uppercase; }
-        .role-select { background: #050508; color: #ffd700; border: 1px solid #ffd700; padding: 6px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 4px; outline: none; cursor: pointer; }
+        /* 👑 THANH CHỌN QUYỀN HỆ THỐNG */
+        .role-selector-bar { background: #121224; border: 1px solid #00f0ff; border-radius: 6px; padding: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); }
+        .role-selector-bar span { font-size: 0.85rem; font-weight: bold; color: #00f0ff; }
+        .role-selector-bar select { background: #050508; color: #ffd700; border: 1px solid #ffd700; padding: 6px 12px; font-weight: bold; font-size: 0.85rem; border-radius: 4px; outline: none; cursor: pointer; }
+
+        /* 🛡️ LOGIC PHÂN QUYỀN MỚI THEO YÊU CẦU */
+        
+        /* 1. KHÁCH: Khóa toàn bộ nút, chỉ được xem */
+        body.role-guest button,
+        body.role-guest select,
+        body.role-guest input {
+            pointer-events: none !important;
+        }
+        body.role-guest .role-selector-bar,
+        body.role-guest .role-selector-bar * {
+            pointer-events: auto !important;
+        }
+        body.role-guest .upload-card,
+        body.role-guest .add-student-box,
+        body.role-guest .btn-call,
+        body.role-guest .btn-delete,
+        body.role-guest .copy-btn,
+        body.role-guest .student-controls-row {
+            display: none !important;
+        }
+
+        /* 2. GIÁO VIÊN: Chỉ hiện tên học sinh, nút Vắng, danh sách vắng, nút thêm học sinh mới */
+        body.role-teacher .upload-card,
+        body.role-teacher .btn-call,
+        body.role-teacher .btn-delete,
+        body.role-teacher .copy-btn,
+        body.role-teacher .student-controls-row .btn-present,
+        body.role-teacher .student-controls-row .note-select {
+            display: none !important;
+        }
+
+        /* 3. TRỢ GIẢNG: Có tất cả các nút, nhưng nút gọi (btn-call) chỉ hiện khi học sinh đó bị bấm vắng */
+        body.role-assistant .upload-card,
+        body.role-assistant .btn-delete {
+            display: none !important;
+        }
+        /* Mặc định ở chế độ trợ giảng, ẩn nút gọi, chỉ khi thẻ học sinh có class status-absent thì mới hiện nút gọi */
+        body.role-assistant .student-card:not(.status-absent) .btn-call {
+            display: none !important;
+        }
 
         /* 📂 KHU VỰC TẢI FILE */
         .upload-card { background: #0a0a14; border: 1px solid #ffd700; border-radius: 6px; padding: 15px 10px; margin-bottom: 15px; box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
@@ -43,13 +84,13 @@
         .progress-container { width: 100%; background-color: #050508; border: 1px solid #333; border-radius: 4px; margin: 10px 0; display: none; overflow: hidden; }
         .progress-bar { width: 0%; height: 16px; background-color: #00ff66; text-align: center; line-height: 16px; color: #000; font-weight: bold; font-size: 0.75rem; transition: width 0.1s ease; box-shadow: 0 0 10px #00ff66; }
 
-        /* 🔍 KHU VỰC TÌM KIẾM */
+        /* 🔍 KHU VỰC TÌM KIẾM HỌC VIÊN CHUNG */
         .search-box { display: block; background: #0d0d1a; border: 1px solid #333; border-radius: 4px; padding: 10px; margin-bottom: 15px; text-align: center; }
         .search-input { width: 73%; background: #050508; border: 1px solid #333; color: #fff; padding: 10px; font-size: 0.9rem; border-radius: 4px; outline: none; margin-right: 2%; display: inline-block; vertical-align: middle; }
         .search-input:focus { border-color: #ffd700; }
         .search-btn { width: 23%; background: #ffd700; color: #000; border: none; padding: 11px 0; font-weight: bold; font-size: 0.85rem; border-radius: 4px; cursor: pointer; text-transform: uppercase; display: inline-block; vertical-align: middle; }
 
-        /* 📊 KẾT QUẢ TÌM KIẾM */
+        /* 📊 KẾT QUẢ TÌM KIẾM TRÊN BẢNG */
         .search-result-panel { background: #1a0813; border: 1px dashed #ff007f; border-radius: 4px; padding: 12px 8px; margin-bottom: 15px; display: none; }
         .result-title { color: #ff007f; font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; display: flex; justify-content: space-between; }
         .result-table { width: 100%; border-collapse: collapse; }
@@ -68,7 +109,7 @@
         .group-panel { padding: 12px 6px; display: none; background: #06060c; }
         .group-block-wrapper.active .group-panel { display: block; }
 
-        /* 🏫 KHỐI LỚP */
+        /* 🏫 KHỐI GIAO DIỆN CHÍNH & ACCORDION LỚP CON */
         .class-block-wrapper { margin-bottom: 12px; background: #0a0a14; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
         .class-accordion-header { padding: 12px 10px; background: #0d0d1f; cursor: pointer; user-select: none; transition: background 0.2s; position: relative; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .class-accordion-header:active { background: #151530; }
@@ -81,19 +122,10 @@
         .class-panel { padding: 15px 8px; display: none; background: #0a0a14; }
         .class-block-wrapper.active .class-panel { display: block; }
         
-        /* ⚡ HIỆU ỨNG NHẤP NHÁY BÁO ĐỘNG */
-        @keyframes alertBlink {
-            0% { opacity: 1; transform: scale(1); box-shadow: 0 0 5px currentColor; }
-            50% { opacity: 0.3; transform: scale(0.97); box-shadow: 0 0 20px currentColor; }
-            100% { opacity: 1; transform: scale(1); box-shadow: 0 0 5px currentColor; }
-        }
-
-        .class-action-buttons { display: flex; gap: 8px; margin-bottom: 15px; }
-        .btn-action-custom { flex: 1; padding: 10px 5px; font-weight: bold; font-size: 0.8rem; border-radius: 4px; cursor: pointer; text-transform: uppercase; text-align: center; border: 1px solid; outline: none; transition: 0.2s; }
-        .btn-action-custom.is-blinking { animation: alertBlink 0.8s infinite ease-in-out; }
-
-        .btn-missing-list { background: rgba(0, 240, 255, 0.15); border-color: #00f0ff; color: #00f0ff; }
-        .btn-new-student { background: rgba(255, 215, 0, 0.15); border-color: #ffd700; color: #ffd700; }
+        .add-student-box { display: flex; flex-direction: column; gap: 8px; background: #0d0d1a; border: 1px solid #ffd700; border-radius: 4px; padding: 12px 10px; margin-bottom: 15px; }
+        .add-student-box input { width: 100%; background: #050508; border: 1px solid #333; color: #fff; padding: 10px; font-size: 0.9rem; border-radius: 4px; outline: none; }
+        .add-student-box input:focus { border-color: #ffd700; }
+        .btn-add { background: #ffd700; color: #000; border: none; padding: 10px; font-weight: bold; font-size: 0.9rem; border-radius: 4px; cursor: pointer; text-transform: uppercase; }
         
         .absent-section { background: rgba(255, 0, 127, 0.05); border: 1px dashed #ff007f; border-radius: 4px; padding: 10px; margin-bottom: 20px; }
         .absent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -102,104 +134,52 @@
         .absent-list { list-style: none; font-size: 0.9rem; color: #ff55a5; line-height: 1.4; }
         .absent-list li { padding: 3px 0; border-bottom: 1px solid rgba(255, 0, 127, 0.1); }
         
-       .student-list { display: flex; flex-direction: column; gap: 6px; }
+        .student-list { display: flex; flex-direction: column; gap: 6px; }
         .student-card { background: #0B1849; border: 1px solid #333; border-left: 4px solid #00f0ff; border-radius: 4px; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; transition: background 0.2s; }
         .student-card.status-absent { border-left-color: #ff007f; background: #1a0813; }
-        .student-card.status-present { border-left-color: #00ff66; background: #0B1849; }
+        .student-card.status-present { border-left-color: #00ff66; background: #081a10; }
         .student-card.highlight-search { border: 1px solid #ffd700 !important; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
         
-        .student-row-inline { display: flex; justify-content: space-between; align-items: center; gap: 6px; width: 100%; flex-wrap: wrap; }
-        .student-meta-inline { display: flex; align-items: center; gap: 8px; min-width: 0; }
-        .student-name { font-weight: bold; font-size: 0.9rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .student-phone { font-size: 0.8rem; color: #888; white-space: nowrap; }
+        .student-info-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #222; padding-bottom: 6px; }
+        .student-meta { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .student-name { font-weight: bold; font-size: 0.95rem; color: #fff; }
+        .student-phone { font-size: 0.8rem; color: #888; }
         
-        .student-actions-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; margin-left: auto; }
-        .btn-call { background: #ffd700; color: #000; padding: 5px 8px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 0 5px #ffd700; }
-        .btn-delete { background: #4a0000; color: #ff3333; border: 1px solid #ff3333; padding: 5px 6px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; }
+        .student-actions-right { display: flex; gap: 5px; }
+        .btn-call { background: #ffd700; color: #000; padding: 8px 12px; font-size: 0.9rem; border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 0 5px #ffd700; }
+        .btn-delete { background: #4a0000; color: #ff3333; border: 1px solid #ff3333; padding: 8px 10px; font-size: 0.9rem; border-radius: 4px; cursor: pointer; }
         
-        .student-controls-row { display: flex; gap: 6px; align-items: center; width: 100%; }
-        .student-controls-row .btn-present { flex-shrink: 0; }
-        .btn-action { padding: 5px 10px; font-size: 0.75rem; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; text-align: center; color: #fff; background: #333; flex-shrink: 0; }
+        .student-controls-row { display: flex; gap: 6px; align-items: center; }
+        .btn-action { flex: 1; padding: 10px 3px; font-size: 0.8rem; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; text-align: center; color: #fff; background: #333; }
         .btn-absent { background: #4a0025; color: #ff007f; border: 1px solid #ff007f; }
         .btn-absent.active { background: #ff007f; color: #fff; box-shadow: 0 0 10px #ff007f; }
         .btn-present { background: #003311; color: #00ff66; border: 1px solid #00ff66; }
         .btn-present.active { background: #00ff66; color: #000; box-shadow: 0 0 10px #00ff66; }
-        .note-select { flex: 1; min-width: 110px; background: #1a1a3a; color: #00f0ff; border: 1px solid #00f0ff; padding: 5px 3px; font-size: 0.75rem; border-radius: 3px; outline: none; }
+        .note-select { flex: 1.5; background: #1a1a3a; color: #00f0ff; border: 1px solid #00f0ff; padding: 9px 3px; font-size: 0.8rem; border-radius: 3px; outline: none; }
         
         .empty-alert { text-align: center; padding: 40px 10px; color: #555; font-style: italic; font-size: 0.95rem; }
-
-       /* 🛡️ QUY TẮC KHÓA VÀ ẨN CÁC PHẦN TỬ Ở CHẾ ĐỘ KHÁCH */
-        body.role-guest button,
-        body.role-guest select,
-        body.role-guest input {
-            pointer-events: none !important;
-        }
-        /* Chỉ cho phép tương tác với thanh chọn quyền ở trên cùng */
-        body.role-guest .role-selector-bar,
-        body.role-guest .role-selector-bar * {
-            pointer-events: auto !important;
-        }
-        /* Ẩn hoàn toàn khung tải file ở chế độ Khách */
-        body.role-guest .upload-card {
-            display: none !important;
-        }
-
-        /* Ẩn các nút hành động lớp, nút Gọi, nút Xoá, nút Đi Học và Ô ghi chú khi ở chế độ Khách, chỉ giữ lại nút Vắng */
-        body.role-guest .class-action-buttons,
-        body.role-guest .btn-call,
-        body.role-guest .btn-delete,
-        body.role-guest .student-controls-row {
-            display: none !important;
-        }
-
-
-        body.role-teacher .custom-upload-btn,
-        body.role-teacher .btn-delete,
-        body.role-teacher .btn-call,
-        body.role-teacher .th-call-col,
-        body.role-teacher .td-call-col,
-        body.role-teacher .upload-card,
-        body.role-teacher .note-select,
-        body.role-teacher .btn-present {
-            display: none !important;
-        }
-
-        body.role-assistant .btn-call {
-            display: none !important;
-        }
-        body.role-assistant .student-card.status-absent .btn-call {
-            display: inline-block !important;
-        }
-        body.role-assistant .th-call-col,
-        body.role-assistant .td-call-col {
-            display: table-cell !important;
-        }
-        body.role-assistant .btn-present {
-            display: none !important;
-        }
-        body.role-assistant .btn-delete {
-            display: none !important;
-        }
     </style>
 </head>
-<body class="role-guest">
+<body class="role-admin">
 
-<h2>HỆ THỐNG QUẢN LÝ ĐIỂM DANH ĐỘNG</h2>
-
+<!-- 👑 THANH CHỌN QUYỀN HỆ THỐNG -->
 <div class="role-selector-bar">
-    <label for="roleSelect">Chế độ hiển thị:</label>
-    <select id="roleSelect" class="role-select" onchange="handleRoleChange(this)">
-        <option value="guest" selected>Khách (Khóa toàn bộ)</option>
-        <option value="teacher">Giáo Viên</option>
-        <option value="assistant">Trợ Giảng (Yêu cầu mật khẩu)</option>
+    <span>🛡️ Chế độ xem:</span>
+    <select id="userRoleSelect" onchange="switchUserRole(this.value)">
+        <option value="guest">Khách (Chỉ xem)</option>
+        <option value="teacher">Giáo Viên (Tên, Vắng, Danh sách vắng & Thêm HS)</option>
+        <option value="assistant">Trợ Giảng (Tất cả, Nút gọi hiện khi bấm Vắng)</option>
+        <option value="admin" selected>Quản Trị Viên (Toàn quyền)</option>
     </select>
 </div>
+
+<h2>HỆ THỐNG QUẢN LÝ ĐIỂM DANH ĐỘNG</h2>
 
 <div class="upload-card">
     <div class="btn-group-top">
         <label for="excelFileInput" class="custom-upload-btn">📂 Tải lên File Excel</label>
         <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="startProcessingExcel(this)">
-        <button class="btn-danger-top" onclick="clearSystemCache()"> XÓA dữ liệu CŨ</button>
+        <button class="btn-danger-top" onclick="clearSystemCache()">XÓA dữ liệu CŨ</button>
     </div>
     <div id="fileStatusMessage" class="file-status">Chưa có dữ liệu học viên. Vui lòng chọn tệp Excel.</div>
 </div>
@@ -224,7 +204,7 @@
                 <th>Họ và Tên</th>
                 <th>SĐT</th>
                 <th>Lớp Học</th>
-                <th class="th-call-col">Gọi</th>
+                <th>Gọi</th>
             </tr>
         </thead>
         <tbody id="resultTableBody"></tbody>
@@ -239,45 +219,23 @@
 const targetSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "DH25", "DH26"];
 let bigClassesDatabase = {};
 
-const ASSISTANT_PASSWORD = "5"; 
-
-function handleRoleChange(selectElement) {
-    const selectedValue = selectElement.value;
-    const bodyTag = document.body;
-    const previousRole = bodyTag.classList.contains('role-teacher') ? 'teacher' : (bodyTag.classList.contains('role-assistant') ? 'assistant' : 'guest');
-
-    if (selectedValue === 'guest') {
-        bodyTag.classList.remove('role-teacher', 'role-assistant');
-        bodyTag.classList.add('role-guest');
-        localStorage.setItem('user_system_role', 'guest');
-        alert("Đã chuyển về Chế độ Khách (khóa toàn bộ các nút).");
-    } else if (selectedValue === 'teacher') {
-        // Đã bỏ mật khẩu của giáo viên theo yêu cầu
-        bodyTag.classList.remove('role-guest', 'role-assistant');
-        bodyTag.classList.add('role-teacher');
-        localStorage.setItem('user_system_role', 'teacher');
-        alert("Đã chuyển sang chế độ Giáo Viên thành công!");
-    } else if (selectedValue === 'assistant') {
-        let passwordInput = prompt("Nhập mật khẩu để chuyển sang chế độ Trợ Giảng:");
-        if (passwordInput === ASSISTANT_PASSWORD) {
-            bodyTag.classList.remove('role-guest', 'role-teacher');
-            bodyTag.classList.add('role-assistant');
-            localStorage.setItem('user_system_role', 'assistant');
-            alert("Đã mở khóa chế độ Trợ Giảng thành công!");
-        } else {
-            alert("Sai mật khẩu! Giữ nguyên chế độ hiện tại.");
-            selectElement.value = previousRole;
-        }
+// HÀM CHUYỂN ĐỔI QUYỀN TRUY CẬP
+function switchUserRole(role) {
+    document.body.classList.remove('role-guest', 'role-teacher', 'role-assistant', 'role-admin');
+    if (role === 'guest') {
+        document.body.classList.add('role-guest');
+        console.log("Đã chuyển sang quyền Khách");
+    } else if (role === 'teacher') {
+        document.body.classList.add('role-teacher');
+        console.log("Đã chuyển sang quyền Giáo Viên");
+    } else if (role === 'assistant') {
+        document.body.classList.add('role-assistant');
+        console.log("Đã chuyển sang quyền Trợ Giảng");
+    } else {
+        document.body.classList.add('role-admin');
+        console.log("Đã chuyển sang quyền Quản Trị Viên");
     }
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-    const selectElem = document.getElementById('roleSelect');
-    selectElem.value = 'guest';
-    document.body.classList.remove('role-teacher', 'role-assistant');
-    document.body.classList.add('role-guest');
-    localStorage.setItem('user_system_role', 'guest');
-});
 
 function displayPhone(p) { 
     if(!p || p === 'Chưa có' || p === 'undefined') return 'Chưa có';
@@ -320,7 +278,7 @@ function startProcessingExcel(input) {
             
             const sheetsToProcess = workbook.SheetNames.filter(name => targetSheets.includes(name.trim()));
             if (sheetsToProcess.length === 0) {
-                alert("Không tìm thấy các sheet mục tiêu trong file Excel của bạn!");
+                alert("Không tìm thấy các sheet mục tiêu (SV, 12, 11... DH26) trong file Excel của bạn!");
                 progressContainer.style.display = 'none';
                 return;
             }
@@ -338,7 +296,7 @@ function startProcessingExcel(input) {
                         totalStudentsCount += bigClassesDatabase[classKey].students.length;
                     });
                     document.getElementById('fileStatusMessage').style.color = "#00ff66";
-                    document.getElementById('fileStatusMessage').innerText = `✅ Nạp thành công! Tìm thấy tổng cộng ${totalStudentsCount} học viên.`;
+                    document.getElementById('fileStatusMessage').innerText = `✅ Nạp thành công! Tìm thấy tổng cộng ${totalStudentsCount} học viên.\nĐã vẽ xong Form Quản Lý cho tất cả các lớp.`;
                     
                     localStorage.setItem('big_classes_database', JSON.stringify(bigClassesDatabase));
                     localStorage.setItem('big_classes_filename', file.name);
@@ -467,7 +425,7 @@ function renderFullSystemUI() {
 
     const classKeys = Object.keys(bigClassesDatabase);
     if (classKeys.length === 0) {
-        mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Vui lòng nạp file Excel!</div>';
+        mainContainer.innerHTML = '<div class="empty-alert">Danh sách trống. Hệ thống sẽ tự động vẽ giao diện HTML sau khi bạn nạp file Excel thành công!</div>';
         return;
     }
 
@@ -540,10 +498,10 @@ function renderFullSystemUI() {
                     <h3>Danh Sách Chi Tiết</h3>
                     <br>
                     
-                    <!-- Hai nút: Bấm lần 1 nhấp nháy + cảnh báo, bấm lần 2 tắt -->
-                    <div class="class-action-buttons">
-                        <button class="btn-action-custom btn-missing-list" onclick="toggleActionBlink(this, 'missing', '${classKey}')">📋 Danh sách thiếu học sinh</button>
-                        <button class="btn-action-custom btn-new-student" onclick="toggleActionBlink(this, 'new', '${classKey}')">➕ Học sinh mới</button>
+                    <div class="add-student-box">
+                        <input type="text" id="inputName-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 1: Nhập họ và tên...">
+                        <input type="tel" id="inputPhone-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 2: Nhập số điện thoại...">
+                        <button class="btn-add" onclick="addNewStudentToClass('${classKey}')">+ Thêm vào danh sách</button>
                     </div>
                     
                     <div class="absent-section">
@@ -577,26 +535,21 @@ function renderStudentCardsHtml(classKey, students) {
         const absentActive = student.status === 'absent' ? 'active' : '';
         const presentActive = student.status === 'present' ? 'active' : '';
         const cardId = `card-${classKey.replace(/\s+/g, '-')}-${student.id}`;
-        const statusClass = `status-${student.status}`;
 
         return `
-            <div class="student-card ${statusClass}" id="${cardId}">
-                <!-- Hàng 1: Tên học sinh, SĐT và Nút Vắng/Gọi/Xoá nằm cùng một hàng -->
-                <div class="student-row-inline">
-                    <div class="student-meta-inline">
+            <div class="student-card status-${student.status}" id="${cardId}">
+                <div class="student-info-row">
+                    <div class="student-meta">
                         <span class="student-name">${idx + 1}. ${student.name}</span>
-                        <span class="student-phone">${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + '***' + student.phone.substring(7) : ''}</span>
+                        <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
                     </div>
-                    
-                    <div style="display: flex; gap: 4px; align-items: center; margin-left: auto;">
-                        <button class="btn-action btn-absent ${absentActive}" onclick="toggleStudentAbsent('${classKey}', ${student.id})">Vắng</button>
+                    <div class="student-actions-right">
                         <button class="btn-call" onclick="callPhoneAction('${student.phone}')">📞</button>
                         <button class="btn-delete" onclick="deleteStudentFromClass('${classKey}', ${student.id}, '${student.name.replace(/'/g, "\\'")}')">Xoá</button>
                     </div>
                 </div>
-
-                <!-- Hàng 2: Nút Đi Học và Khung Ghi Chú -->
                 <div class="student-controls-row">
+                    <button class="btn-action btn-absent ${absentActive}" onclick="updateStudentStatus('${classKey}', ${student.id}, 'absent')">Vắng</button>
                     <button class="btn-action btn-present ${presentActive}" onclick="updateStudentStatus('${classKey}', ${student.id}, 'present')">Đi Học</button>
                     <select class="note-select" onchange="updateStudentNote('${classKey}', ${student.id}, this.value)">
                         <option value="" ${student.note===''?'selected':''}>-- Ghi chú --</option>
@@ -614,29 +567,6 @@ function renderStudentCardsHtml(classKey, students) {
             </div>
         `;
     }).join('');
-}
-
-function toggleStudentAbsent(classKey, studentId) {
-    let student = bigClassesDatabase[classKey].students.find(s => s.id === studentId);
-    if (student) {
-        if (student.status === 'absent') {
-            student.status = 'present'; 
-        } else {
-            student.status = 'absent'; 
-        }
-        saveDatabaseState();
-        
-        const classKeyId = classKey.replace(/\s+/g, '-');
-        const studentsArr = bigClassesDatabase[classKey].students;
-        
-        const total = studentsArr.length;
-        const absent = studentsArr.filter(s => s.status === 'absent').length;
-        const present = total - absent;
-        
-        document.getElementById(`stats-${classKeyId}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
-        document.getElementById(`absentList-${classKeyId}`).innerHTML = renderAbsentRowsHtml(studentsArr);
-        document.getElementById(`studentList-${classKeyId}`).innerHTML = renderStudentCardsHtml(classKey, studentsArr);
-    }
 }
 
 function updateStudentStatus(classKey, studentId, status) {
@@ -687,18 +617,29 @@ function updateGroupStatsText(sheetName) {
     }
 }
 
-/* ⚙️ Bấm lần 1: Bật nhấp nháy + cảnh báo. Bấm lần 2: Tắt nhấp nháy. */
-function toggleActionBlink(buttonElement, type, classKey) {
-    if (buttonElement.classList.contains('is-blinking')) {
-        buttonElement.classList.remove('is-blinking');
-    } else {
-        buttonElement.classList.add('is-blinking');
-        if (type === 'missing') {
-            alert("⚠️ CẢNH BÁO: Đang ở chế độ xem danh sách thiếu học sinh của lớp " + classKey + ".");
-        } else {
-            alert("⚠️ CẢNH BÁO: Chức năng thông báo học sinh mới của lớp " + classKey + ".");
-        }
-    }
+function addNewStudentToClass(classKey) {
+    const classIdStr = classKey.replace(/\s+/g, '-');
+    const nameInput = document.getElementById(`inputName-${classIdStr}`);
+    const phoneInput = document.getElementById(`inputPhone-${classIdStr}`);
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim().replace(/\s+/g, '') || 'Chưa có';
+    if (name === '') { alert('Vui lòng nhập tên học viên!'); return; }
+
+    const studentsList = bigClassesDatabase[classKey].students;
+    const nextId = studentsList.length > 0 ? Math.max(...studentsList.map(s => s.id)) + 1 : 1;
+    studentsList.push({ id: nextId, name: name, phone: phone, status: 'present', note: '' });
+    saveDatabaseState();
+    
+    nameInput.value = '';
+    phoneInput.value = '';
+    const total = studentsList.length;
+    const absent = studentsList.filter(s => s.status === 'absent').length;
+    const present = total - absent;
+    document.getElementById(`stats-${classIdStr}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
+    document.getElementById(`absentList-${classIdStr}`).innerHTML = renderAbsentRowsHtml(studentsList);
+    document.getElementById(`studentList-${classIdStr}`).innerHTML = renderStudentCardsHtml(classKey, studentsList);
+    
+    updateGroupStatsText(bigClassesDatabase[classKey].sheet);
 }
 
 function deleteStudentFromClass(classKey, studentId, studentName) {
@@ -792,7 +733,7 @@ function searchGlobalStudent() {
                     <td style="font-weight: bold; color: #fff;">${student.name}</td>
                     <td style="color: #00ff66; font-family: monospace;">${displayPhone(student.phone)}</td>
                     <td style="color: #00f0ff; font-weight: bold; font-size:0.75rem;">${classKey}</td>
-                    <td class="td-call-col" style="text-align:center;"><button class="btn-call" style="padding:4px 8px; font-size:0.8rem;" onclick="callPhoneAction('${student.phone}')">📞</button></td>
+                    <td style="text-align:center;"><button class="btn-call" style="padding:4px 8px; font-size:0.8rem;" onclick="callPhoneAction('${student.phone}')">📞</button></td>
                 `;
                 resultBody.appendChild(tr);
             }
