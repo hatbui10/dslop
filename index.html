@@ -551,7 +551,7 @@ function renderStudentCardsHtml(classKey, students) {
                     <div class="student-meta">
                         <div class="meta-top-row">
                             <span class="student-name">${idx + 1}. ${student.name}</span>
-                            <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
+                            <span class="student-phone" style="display:none;">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
                             <button class="btn-quick-absent ${absentActive}" onclick="toggleAbsentStatus('${classKey}', ${student.id})">Vắng</button>
                         </div>
                     </div>
