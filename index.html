@@ -139,7 +139,47 @@
         .student-card.status-absent { border-left-color: #ff007f; background: #1a0813; }
         .student-card.status-present { border-left-color: #00ff66; background: #081a10; }
         .student-card.highlight-search { border: 1px solid #ffd700 !important; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
-        
+        .student-info-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    gap: 8px; 
+    border-bottom: 1px solid #222; 
+    padding-bottom: 6px; 
+}
+
+/* Gom nhóm các nút điểm nhanh nằm gọn cạnh tên */
+.inline-action-group {
+    display: none; /* Mặc định ẩn, sẽ được kích hoạt theo phân quyền */
+    gap: 4px;
+    align-items: center;
+}
+
+/* Hiển thị nút Vắng / Đi học lên hàng trên cùng cho Giáo Viên và Trợ Giảng */
+body.role-teacher .student-info-row .inline-action-group,
+body.role-assistant .student-info-row .inline-action-group {
+    display: flex !important;
+}
+
+/* Thu gọn kích thước nút cho vừa dòng trên */
+.btn-quick-action {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    color: #fff;
+}
+.btn-quick-absent {
+    background: #4a0025;
+    color: #ff007f;
+    border: 1px solid #ff007f;
+}
+.btn-quick-absent.active {
+    background: #ff007f;
+    color: #fff;
+}
         .student-info-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #222; padding-bottom: 6px; }
         .student-meta { display: flex; flex-direction: column; gap: 2px; flex: 1; }
         .student-name { font-weight: bold; font-size: 0.95rem; color: #fff; }
@@ -166,10 +206,10 @@
 <div class="role-selector-bar">
     <span>🛡️ Chế độ xem:</span>
     <select id="userRoleSelect" onchange="switchUserRole(this.value)">
-        <option value="guest">Khách (Chỉ xem)</option>
-        <option value="teacher">Giáo Viên (Tên, Vắng, Danh sách vắng & Thêm HS)</option>
-        <option value="assistant">Trợ Giảng (Tất cả, Nút gọi hiện khi bấm Vắng)</option>
-        <option value="admin" selected>Quản Trị Viên (Toàn quyền)</option>
+        <option value="guest">Khách</option>
+        <option value="teacher">Giáo Viên </option>
+        <option value="assistant">Trợ Giảng </option>
+        <option value="admin" selected>Quản Trị Viên </option>
     </select>
 </div>
 
