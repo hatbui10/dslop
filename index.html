@@ -55,7 +55,6 @@
         body.role-assistant .btn-delete {
             display: none !important;
         }
-        /* Mặc định ở chế độ trợ giảng, ẩn nút gọi, chỉ khi thẻ học sinh có class status-absent thì mới hiện nút gọi */
         body.role-assistant .student-card:not(.status-absent) .btn-call {
             display: none !important;
         }
@@ -139,52 +138,29 @@
         .student-card.status-absent { border-left-color: #ff007f; background: #1a0813; }
         .student-card.status-present { border-left-color: #00ff66; background: #081a10; }
         .student-card.highlight-search { border: 1px solid #ffd700 !important; box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
-        .student-info-row { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    gap: 8px; 
-    border-bottom: 1px solid #222; 
-    padding-bottom: 6px; 
-}
-
-/* Gom nhóm các nút điểm nhanh nằm gọn cạnh tên */
-.inline-action-group {
-    display: none; /* Mặc định ẩn, sẽ được kích hoạt theo phân quyền */
-    gap: 4px;
-    align-items: center;
-}
-
-/* Hiển thị nút Vắng / Đi học lên hàng trên cùng cho Giáo Viên và Trợ Giảng */
-body.role-teacher .student-info-row .inline-action-group,
-body.role-assistant .student-info-row .inline-action-group {
-    display: flex !important;
-}
-
-/* Thu gọn kích thước nút cho vừa dòng trên */
-.btn-quick-action {
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    color: #fff;
-}
-.btn-quick-absent {
-    background: #4a0025;
-    color: #ff007f;
-    border: 1px solid #ff007f;
-}
-.btn-quick-absent.active {
-    background: #ff007f;
-    color: #fff;
-}
+        
         .student-info-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid #222; padding-bottom: 6px; }
         .student-meta { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .meta-top-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .student-name { font-weight: bold; font-size: 0.95rem; color: #fff; }
         .student-phone { font-size: 0.8rem; color: #888; }
         
+        .btn-quick-absent {
+            background: #4a0025;
+            color: #ff007f;
+            border: 1px solid #ff007f;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-quick-absent.active {
+            background: #ff007f;
+            color: #fff;
+            box-shadow: 0 0 8px #ff007f;
+        }
+
         .student-actions-right { display: flex; gap: 5px; }
         .btn-call { background: #ffd700; color: #000; padding: 8px 12px; font-size: 0.9rem; border: none; border-radius: 4px; cursor: pointer; box-shadow: 0 0 5px #ffd700; }
         .btn-delete { background: #4a0000; color: #ff3333; border: 1px solid #ff3333; padding: 8px 10px; font-size: 0.9rem; border-radius: 4px; cursor: pointer; }
@@ -200,16 +176,15 @@ body.role-assistant .student-info-row .inline-action-group {
         .empty-alert { text-align: center; padding: 40px 10px; color: #555; font-style: italic; font-size: 0.95rem; }
     </style>
 </head>
-<body class="role-admin">
+<body class="role-teacher">
 
 <!-- 👑 THANH CHỌN QUYỀN HỆ THỐNG -->
 <div class="role-selector-bar">
     <span>🛡️ Chế độ xem:</span>
     <select id="userRoleSelect" onchange="switchUserRole(this.value)">
         <option value="guest">Khách</option>
-        <option value="teacher">Giáo Viên </option>
-        <option value="assistant">Trợ Giảng </option>
-        <option value="admin" selected>Quản Trị Viên </option>
+        <option value="teacher" selected>Giáo Viên</option>
+        <option value="assistant">Trợ Giảng</option>
     </select>
 </div>
 
@@ -259,21 +234,15 @@ body.role-assistant .student-info-row .inline-action-group {
 const targetSheets = ["SV", "12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "DH25", "DH26"];
 let bigClassesDatabase = {};
 
-// HÀM CHUYỂN ĐỔI QUYỀN TRUY CẬP
+// HÀM CHUYỂN ĐỔI QUYỀN TRUY CẬP (Đã bỏ quản trị viên)
 function switchUserRole(role) {
-    document.body.classList.remove('role-guest', 'role-teacher', 'role-assistant', 'role-admin');
+    document.body.classList.remove('role-guest', 'role-teacher', 'role-assistant');
     if (role === 'guest') {
         document.body.classList.add('role-guest');
-        console.log("Đã chuyển sang quyền Khách");
-    } else if (role === 'teacher') {
-        document.body.classList.add('role-teacher');
-        console.log("Đã chuyển sang quyền Giáo Viên");
     } else if (role === 'assistant') {
         document.body.classList.add('role-assistant');
-        console.log("Đã chuyển sang quyền Trợ Giảng");
     } else {
-        document.body.classList.add('role-admin');
-        console.log("Đã chuyển sang quyền Quản Trị Viên");
+        document.body.classList.add('role-teacher');
     }
 }
 
@@ -580,16 +549,20 @@ function renderStudentCardsHtml(classKey, students) {
             <div class="student-card status-${student.status}" id="${cardId}">
                 <div class="student-info-row">
                     <div class="student-meta">
-                        <span class="student-name">${idx + 1}. ${student.name}</span>
-                        <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
+                        <div class="meta-top-row">
+                            <span class="student-name">${idx + 1}. ${student.name}</span>
+                            <span class="student-phone">SĐT: ${student.phone && student.phone !== 'Chưa có' ? student.phone.substring(0, 4) + ' *** ' + student.phone.substring(7) : 'Chưa có'}</span>
+                            <button class="btn-quick-absent ${absentActive}" onclick="toggleAbsentStatus('${classKey}', ${student.id})">Vắng</button>
+                        </div>
                     </div>
+                    
                     <div class="student-actions-right">
                         <button class="btn-call" onclick="callPhoneAction('${student.phone}')">📞</button>
                         <button class="btn-delete" onclick="deleteStudentFromClass('${classKey}', ${student.id}, '${student.name.replace(/'/g, "\\'")}')">Xoá</button>
                     </div>
                 </div>
+                
                 <div class="student-controls-row">
-                    <button class="btn-action btn-absent ${absentActive}" onclick="updateStudentStatus('${classKey}', ${student.id}, 'absent')">Vắng</button>
                     <button class="btn-action btn-present ${presentActive}" onclick="updateStudentStatus('${classKey}', ${student.id}, 'present')">Đi Học</button>
                     <select class="note-select" onchange="updateStudentNote('${classKey}', ${student.id}, this.value)">
                         <option value="" ${student.note===''?'selected':''}>-- Ghi chú --</option>
@@ -607,6 +580,30 @@ function renderStudentCardsHtml(classKey, students) {
             </div>
         `;
     }).join('');
+}
+
+// LOGIC MỚI: Ấn lần 1 đưa vào danh sách vắng, ấn lần 2 xóa khỏi danh sách vắng (về lại đi học)[cite: 2]
+function toggleAbsentStatus(classKey, studentId) {
+    let student = bigClassesDatabase[classKey].students.find(s => s.id === studentId);
+    if (student) {
+        if (student.status === 'absent') {
+            student.status = 'present';
+        } else {
+            student.status = 'absent';
+        }
+        saveDatabaseState();
+        
+        const classKeyId = classKey.replace(/\s+/g, '-');
+        const studentsArr = bigClassesDatabase[classKey].students;
+        
+        const total = studentsArr.length;
+        const absent = studentsArr.filter(s => s.status === 'absent').length;
+        const present = total - absent;
+        
+        document.getElementById(`stats-${classKeyId}`).innerText = 'Sĩ số: ' + total + ' | Có mặt: ' + present + ' | Vắng: ' + absent;
+        document.getElementById(`absentList-${classKeyId}`).innerHTML = renderAbsentRowsHtml(studentsArr);
+        document.getElementById(`studentList-${classKeyId}`).innerHTML = renderStudentCardsHtml(classKey, studentsArr);
+    }
 }
 
 function updateStudentStatus(classKey, studentId, status) {
