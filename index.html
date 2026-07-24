@@ -51,10 +51,7 @@
         }
 
         /* 3. TRỢ GIẢNG: Có tất cả các nút, nhưng nút gọi (btn-call) chỉ hiện khi học sinh đó bị bấm vắng */
-        body.role-assistant .upload-card,
-        body.role-assistant .btn-delete {
-            display: none !important;
-        }
+       
         body.role-assistant .student-card:not(.status-absent) .btn-call {
             display: none !important;
         }
@@ -174,13 +171,54 @@
         .note-select { flex: 1.5; background: #1a1a3a; color: #00f0ff; border: 1px solid #00f0ff; padding: 9px 3px; font-size: 0.8rem; border-radius: 3px; outline: none; }
         
         .empty-alert { text-align: center; padding: 40px 10px; color: #555; font-style: italic; font-size: 0.95rem; }
-    </style>
+    
+
+
+/* ➕ Nút học sinh mới trực tiếp (Đã căn giữa) */
+.btn-new-student-direct {
+    display: block;          /* Chuyển thành dạng khối để căn giữa */
+    width: 50%;              /* Hoặc chỉnh kích thước tùy ý, ví dụ: 80% thay vì 100% */
+    margin: 0 auto 12px auto;/* Căn giữa sang hai bên và tạo khoảng cách dưới */
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid #ffd700;
+border-radius: 20px;
+    color: #ffd700;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    
+    cursor: pointer;
+    text-transform: uppercase;
+    text-align: center;      /* Căn chữ ở giữa nút */
+    transition: all 0.2s ease;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.btn-new-student-direct:active {
+    background: #ffd700;
+    color: #000;
+    box-shadow: 0 0 12px #ffd700;
+}
+
+@keyframes alertBlink {
+    0% { opacity: 1; transform: scale(1); box-shadow: 0 0 5px currentColor; }
+    50% { opacity: 0.3; transform: scale(0.97); box-shadow: 0 0 20px currentColor; }
+    100% { opacity: 1; transform: scale(1); box-shadow: 0 0 5px currentColor; }
+}
+
+/* Sửa lại selector ở đây để khớp với class của nút */
+.btn-new-student-direct.is-blinking,
+.btn-action-custom.is-blinking { 
+    animation: alertBlink 0.8s infinite ease-in-out; 
+}
+
+</style>
 </head>
 <body class="role-teacher">
 
 <!-- 👑 THANH CHỌN QUYỀN HỆ THỐNG -->
 <div class="role-selector-bar">
-    <span>🛡️ Chế độ xem:</span>
+   <span>👑 Chế độ xem:</span>
     <select id="userRoleSelect" onchange="switchUserRole(this.value)">
         <option value="guest">Khách</option>
         <option value="teacher" selected>Giáo Viên</option>
@@ -507,11 +545,7 @@ function renderFullSystemUI() {
                     <h3>Danh Sách Chi Tiết</h3>
                     <br>
                     
-                    <div class="add-student-box">
-                        <input type="text" id="inputName-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 1: Nhập họ và tên...">
-                        <input type="tel" id="inputPhone-${classKey.replace(/\s+/g, '-')}" placeholder="Dòng 2: Nhập số điện thoại...">
-                        <button class="btn-add" onclick="addNewStudentToClass('${classKey}')">+ Thêm vào danh sách</button>
-                    </div>
+                    <button class="btn-new-student-direct" onclick="toggleNewStudentBlink(this, '${classKey}')">➕ Có học sinh mới</button>
                     
                     <div class="absent-section">
                         <div class="absent-header">
@@ -821,6 +855,21 @@ function clearSystemCache() {
         document.getElementById('fileStatusMessage').innerText = "Chưa có dữ liệu học viên. Vui lòng chọn tệp Excel.";
     }
 }
+
+
+function toggleNewStudentBlink(buttonElement, classKey) {
+    // Đảo trạng thái class 'is-blinking' (Bấm lần 1: thêm class -> nhấp nháy. Bấm lần 2: gỡ class -> đứng yên)
+    buttonElement.classList.toggle('is-blinking');
+    
+    const isBlinking = buttonElement.classList.contains('is-blinking');
+    
+    if (isBlinking) {
+        console.log(`Đã BẬT trạng thái nhấp nháy "Học sinh mới" cho lớp: ${classKey}`);
+    } else {
+        console.log(`Đã TẮT trạng thái nhấp nháy "Học sinh mới" cho lớp: ${classKey}`);
+    }
+}
+
 </script>
 
 <script type="module">
